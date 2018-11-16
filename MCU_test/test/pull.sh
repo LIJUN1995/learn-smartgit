@@ -1,0 +1,1 @@
+adb pull /data/picture /home/orchid/mycode/test_sp0828_getpic/

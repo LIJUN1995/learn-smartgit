@@ -324,8 +324,17 @@ void draw_image(int w,int h,void* image)
             else{
 		        pix=p[i + j*(w)]|(p[i + j*(w)]<<8)|(p[i + j*(w)]<<16);
                 loc32[i + j*(stride)] = pix;
-
 	    }
+
+         for (j = 0; j < h; j++)
+        for (i = 0; i < w; i++)
+            if (vi.bits_per_pixel == 16)
+                loc[i + j*(stride)] = pix;
+            else{
+		        pix=p[i + j*(w)]|(p[i + j*(w)]<<8)|(p[i + j*(w)]<<16);
+                loc32[i + j*(stride)+(h+5)*(stride)] = pix;
+	    }
+
 	// for (j = 0; j < h; j++)
     //     	for (i = 0; i < w; i++){
 	// 	pix=green32;

@@ -188,7 +188,6 @@ int main(int argc,char *argv[])
 {
 	int m_fd = -1,count = 0,num = 0,r_num = 0,i,ret;
 	cdfinger_spi_data data;
-	cdfinger_spi_data my_data;
 	struct timeval tp,te;
 	char file_name[64] = {0};
 
@@ -210,56 +209,34 @@ int main(int argc,char *argv[])
 	memset(data.tx,0x90,BUF_SIZE_T);
 	memset(data.rx,0x66,atoi(argv[1])*atoi(argv[2]));
 	data.length = atoi(argv[1])*atoi(argv[2]);
-	
-	my_data.tx = (unsigned char *)malloc(BUF_SIZE_T);
-	my_data.rx = (unsigned char *)malloc(atoi(argv[1])*atoi(argv[2]));
-	memset(my_data.tx,0x90,BUF_SIZE_T);
-	memset(my_data.rx,0x66,atoi(argv[1])*atoi(argv[2]));
-	my_data.length = atoi(argv[1])*atoi(argv[2]);
 
 	unsigned char *mx = (unsigned char *)malloc(atoi(argv[1])*atoi(argv[2]));
 	do{
-		//if(count == 0){
+		if(count == 0){
 			printf("How much pictures do you want to save:");
 			scanf("%d",&count);
 			if(count == 999)
 				break;
-		//}
-		int fb = 0;
-		if(count == 2)
-			ret = ioctl(m_fd,CDFINGER_CTL_SPI,&data);
-		else if(count == 1){
-			ret = ioctl(m_fd,CDFINGER_CTL_SPI,&my_data);
-			printf("11111111111111111111\n");
-			for(i = 0; i < atoi(argv[1])*atoi(argv[2]);i++) {
-				fb = (int)(abs(my_data.rx[i]-data.rx[i])*2);
-				if(fb > 255)
-					mx[i] = 0xff;
-				else
-					mx[i] = (unsigned char)fb;
-				printf("%02x    ",data.rx[i]);
-			}
 		}
+		ret = ioctl(m_fd,CDFINGER_CTL_SPI,&data);
 
 		printf("\nr_num = %d\n",r_num);
 
 		gettimeofday(&tp,NULL);
-		draw_image(atoi(argv[1]),atoi(argv[2]),mx);
+		draw_image(atoi(argv[1]),atoi(argv[2]),data.rx);
 		gettimeofday(&te,NULL);
 		printf("draw_image spend %ld ms,save successed ========== %d\n",te.tv_usec-tp.tv_usec,num);
 
 		sprintf(file_name, "/data/picture/%d.bmp", num);
-		fp_SaveGrayBmpFile(file_name, mx,atoi(argv[1]),atoi(argv[2]),8);
+		fp_SaveGrayBmpFile(file_name, data.rx,atoi(argv[1]),atoi(argv[2]),8);
 		sprintf(file_name, "/data/picture/%d.bin", num);
-		fp_SaveBinFile(file_name,mx,atoi(argv[1]),atoi(argv[2]));
-		memset(mx,0x66,atoi(argv[1])*atoi(argv[2]));
+		fp_SaveBinFile(file_name,data.rx,atoi(argv[1]),atoi(argv[2]));
+		memset(data.rx,0x66,atoi(argv[1])*atoi(argv[2]));
 		num++;
 	}while(count--);
 
 	free(data.rx);
 	free(data.tx);
-	free(my_data.rx);
-	free(my_data.tx);
 	close(m_fd);
 	return 0;
 }
