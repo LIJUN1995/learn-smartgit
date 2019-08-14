@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "semaphore.h": "c",
+        "spi.h": "c",
+        "test_cpld.h": "c",
+        "i2c.h": "c",
+        "cmos.h": "c"
+    }
+}
