@@ -3,7 +3,7 @@
 #include "i2c.h"
 #include "spi.h"
 #include <stdlib.h>
-#include "log.h"
+//#include "log.h"
 #include <errno.h>
 #include "cdfinger_signal.h"
 #include "sys/ioctl.h"
@@ -1121,19 +1121,18 @@ void PowerUpAndConnectNVCM(unsigned char spi_mode)
     data.rx = rx;
 
     ioctl(m_fd,CDFINGER_CONTROL_CS,0);
-    usleep(1);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,1);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,0);
-    usleep(1000*2);
+    usleep(1000*102);
+    ioctl(m_fd,CDFINGER_HW_RESET,0);
+    usleep(1000*104);
     ioctl(m_fd,CDFINGER_CONTROL_CS,1);
+    usleep(195);
     ioctl(m_fd,CDFINGER_CONTROL_CS,0);
-    usleep(1000*2);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,0);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,1);
+    usleep(101);
+    ioctl(m_fd,CDFINGER_HW_RESET,1);
 
-    usleep(1000*2);
+    usleep(1000*104);
 
-    // ioctl(m_fd,CDFINGER_INIT_GPIO);
+    ioctl(m_fd,CDFINGER_INIT_GPIO);
     ioctl(m_fd,CDFINGER_SPI_MODE,spi_mode);
 
     data.tx[0] = 0x7e;
@@ -1146,7 +1145,6 @@ void PowerUpAndConnectNVCM(unsigned char spi_mode)
     data.tx_length = 6;
     spi_send_data(&data);
 
-    usleep(8);
     check_busy();
 }
 
@@ -1424,7 +1422,7 @@ void send_sclk(int count)
 
 void programming_NVCM(void)
 {
-#if 1
+#if 0
     /* Power up & Connect Programmer to NVCM */
     PowerUpAndConnectNVCM(0);
     
@@ -1450,7 +1448,7 @@ void programming_NVCM(void)
     VerifyNVCMMainArrays();
 #endif
 
-#if 0
+#if 1
     int i = 0,n = 0,count = 0;
     cdfinger_spi_data data;
     data.tx = (unsigned char *)malloc(1024);
@@ -1458,19 +1456,35 @@ void programming_NVCM(void)
     memset(data.tx,0x00,1024);
     memset(data.rx,0x00,1024);
 
+    // ioctl(m_fd,CDFINGER_CONTROL_CS,0);
+    // ioctl(m_fd,CDFINGER_HW_RESET,0);
+    // // ioctl(m_fd,CDFINGER_CONTROL_CLK,0);
+    // usleep(130);
+    // // ioctl(m_fd,CDFINGER_CONTROL_CLK,1);
+    // ioctl(m_fd,CDFINGER_CONTROL_CS,1);
+    // ioctl(m_fd,CDFINGER_HW_RESET,1);
+    // usleep(1000*300);
+    // ioctl(m_fd,CDFINGER_CONTROL_CS,0);
+    // ioctl(m_fd,CDFINGER_HW_RESET,0);
+    // usleep(130);
+    // ioctl(m_fd,CDFINGER_CONTROL_CS,1);
+    // ioctl(m_fd,CDFINGER_HW_RESET,1);
+
+    // usleep(1000*300);
+
     ioctl(m_fd,CDFINGER_CONTROL_CS,0);
-    usleep(1);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,1);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,0);
-    usleep(1000*2);
+    usleep(1000*102);
+    ioctl(m_fd,CDFINGER_HW_RESET,0);
+    usleep(1000*104);
     ioctl(m_fd,CDFINGER_CONTROL_CS,1);
+    usleep(195);
     ioctl(m_fd,CDFINGER_CONTROL_CS,0);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,0);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,1);
+    usleep(1000*101);
+    ioctl(m_fd,CDFINGER_HW_RESET,1);
 
-    usleep(1000*2);
+    usleep(1000*300);
 
-    // ioctl(m_fd,CDFINGER_INIT_GPIO);
+    ioctl(m_fd,CDFINGER_INIT_GPIO);
     ioctl(m_fd,CDFINGER_SPI_MODE,0);
 
     memset(data.tx,0,6);
@@ -1487,15 +1501,9 @@ void programming_NVCM(void)
     for ( i = 0; i < 6; i++)
     {
         printf("0x%02x\n",data.rx[i]);
-    }
-    
+    } 
 
-    // memset(data.tx,0x00,1024);
-    // memset(data.rx,0x00,1024);
-    // data.length = 625;
-    // data.tx_length = 625;
-    // spi_send_data(&data);
-    usleep(1000*5);
+    printf("\n\n\n");
 
     check_busy();
 
@@ -1516,6 +1524,12 @@ void programming_NVCM(void)
     data.tx_length = 12;
     spi_send_data(&data);
 
+    for ( i = 0; i < 12; i++)
+    {
+        printf("0x%02x\n",data.rx[i]);
+    } 
+    printf("\n\n\n");
+
     check_busy();
 
     memset(data.tx,0,5);
@@ -1527,16 +1541,26 @@ void programming_NVCM(void)
     data.length = 5;
     data.tx_length = 5;
     spi_send_data(&data);
-    printf("data.rx[0]=0x%02x, data.rx[1]=0x%02x\n",data.rx[0],data.rx[1]);
+    for ( i = 0; i < 5; i++)
+    {
+        printf("0x%02x\n",data.rx[i]);
+    } 
+    printf("\n\n\n");
 
     check_busy();
 
     memset(data.tx,0,14);
     data.tx[0] = 0x03;
-    data.length = 14;
-    data.tx_length = 14;
+    data.length = 40;
+    data.tx_length = 40;
     spi_send_data(&data);
-    printf("data.rx[13]=0x%02x\n",data.rx[13]);
+    for ( i = 0; i < 14; i++)
+    {
+        printf("0x%02x\n",data.rx[i]);
+    } 
+    printf("\n\n\n");
+
+    check_busy();
 
     // check_busy();
 
