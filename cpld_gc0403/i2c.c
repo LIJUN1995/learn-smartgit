@@ -27,6 +27,7 @@ int i2c_write_data(unsigned short reg_address, unsigned char reg_data){
 
     do{
         spi_send_data(data);
+        printf("1 i2c write data = 0x%02x!!!!!!\n",data->rx[3]);
     }while(data->rx[3]&0x80 == 0x80);
 
     /*set slaver device id*/
@@ -68,7 +69,6 @@ int i2c_write_data(unsigned short reg_address, unsigned char reg_data){
     data->tx_length = 3;
     spi_send_data(data);
 
-
     do{
         memset(data->tx, 0x66, 6);
         memset(data->rx, 0x00, 6);
@@ -76,6 +76,7 @@ int i2c_write_data(unsigned short reg_address, unsigned char reg_data){
         data->length    = 4;
         data->tx_length = 4;
         spi_send_data(data);
+        printf("2 i2c write data = 0x%02x!!!!!!\n",data->rx[3]);
     }while(data->rx[3] != 0x08);
 
     free(data->tx);

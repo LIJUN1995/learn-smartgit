@@ -23,18 +23,12 @@ int OpenDeviceFile(char *dir)
 
 void DeviceInit(void)
 {
-    uint8_t prio = 0;
     fb_main();
-
-    //ioctl(m_fd, CDFINGER_RESET);
-    // scanf("%d", &prio);
-    // ioctl(m_fd,CDFINGER_SET_PRIO,prio);
-
-    ioctl(m_fd, CDFINGER_INIT_IRQ);
-    ioctl(m_fd, CDFINGER_POWER_ON);
-	ioctl(m_fd, CDFINGER_CHANGER_CLK_FREQUENCY, 1000000);
     sem_init(&g_down_sem, 0, 0);
     cfp_handler_register(sig_handler);
+    ioctl(m_fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000);
+    ioctl(m_fd,CDFINGER_INIT_IRQ);
+    ioctl(m_fd, CDFINGER_POWER_ON);
 }
 
 void CloseDeviceFile(void)

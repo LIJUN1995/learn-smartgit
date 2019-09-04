@@ -26,6 +26,26 @@ chip_cfg camera_cfg={
     DON_T_UPDATA_PROGRAM,//updata_program
 };
 
+static unsigned char SENSOR_INIT_CONF[][2] = {
+    0xfe, 0x80, 0xfe, 0x80, 0xfe, 0x80, 0xf2, 0x00, 0xf6, 0x00, 0xfc, 0xc6, 0xf7, 0x19, 0xf8, 0x01, 0xf9, 0x3e, 0xfe,
+    0x03, 0x06, 0x80, 0x06, 0x00, 0xfe, 0x00, 0xf9, 0x2e, 0xfe, 0x00, 0xfa, 0x00, 0xfe, 0x00, 0x03, 0x0a, 0x04, 0x55,
+    0x05, 0x00, 0x06, 0xbb, 0x07, 0x00, 0x08, 0x46, 0x0c, 0x04, 0x0d, 0x02, 0x0e, 0x48, 0x0f, 0x03, 0x10, 0x08, 0x11,
+    0x23, 0x12, 0x10, 0x13, 0x11, 0x14, 0x01, 0x15, 0x00, 0x16, 0xc0, 0x17, 0x14, 0x18, 0x02, 0x19, 0x38, 0x1a, 0x11,
+    0x1b, 0x06, 0x1c, 0x04, 0x1d, 0x00, 0x1e, 0xfc, 0x1f, 0x09, 0x20, 0xb5, 0x21, 0x3f, 0x22, 0xe6, 0x23, 0x32, 0x24,
+    0x2f, 0x27, 0x00, 0x28, 0x00, 0x2a, 0x00, 0x2b, 0x03, 0x2c, 0x00, 0x2d, 0x01, 0x2e, 0xf0, 0x2f, 0x01, 0x25, 0xc0,
+    0x3d, 0xe0, 0x3e, 0x45, 0x3f, 0x1f, 0xc2, 0x17, 0x30, 0x22, 0x31, 0x23, 0x32, 0x02, 0x33, 0x03, 0x34, 0x04, 0x35,
+    0x05, 0x36, 0x06, 0x37, 0x07, 0x38, 0x0f, 0x39, 0x17, 0x3a, 0x1f, 0xb6, 0x04, 0xfe, 0x00, 0x8a, 0x00, 0x8c, 0x07,
+    0x8e, 0x02, 0x90, 0x01, 0x94, 0x02, 0x95, 0x02, 0x96, 0x40, 0x97, 0x03, 0x98, 0x00, 0xfe, 0x00, 0x18, 0x02, 0x40,
+    0x22, 0x41, 0x01, 0x5e, 0x00, 0x66, 0x20, 0xfe, 0x03, 0x01, 0x83, 0x02, 0x11, 0x03, 0x96, 0x04, 0x01, 0x05, 0x00,
+    0x06, 0xa4, 0x10, 0x90, 0x11, 0x2b, 0x12, 0xc0, 0x13, 0x03, 0x15, 0x02, 0x21, 0x10, 0x22, 0x03, 0x23, 0x20, 0x24,
+    0x02, 0x25, 0x10, 0x26, 0x05, 0x21, 0x10, 0x29, 0x03, 0x2a, 0x0a, 0x2b, 0x04, 0xfe, 0x00, 0xb0, 0x50, 0xb6, 0x01,
+
+    0x03,0x00,0x04,0x15,
+    // 0x8b, 0xb2, 0x8d, 0x38,
+
+    // 0x8b, 0xa2, 0x8d, 0x03,0x8c,0x07,
+};
+
 /********************************************************************************
 *函 数 名：cdfinger_camera_reset
 *函数功能：配置复位模式
@@ -392,184 +412,6 @@ void cdfinger_change_exposureTime(int i)
 	i2c_write_data(0x3101,nb);	
 }
 
-
-void cmos_init(void){
-    /*read id*/
-    printf("camera 768 x 576 init start\n");
-    cdfinger_spi_data data;
-    uint8_t tx[10] = {0};
-    uint8_t rx[10] = {0};
-    uint8_t data_f8 = 0,data_02 = 0;
-
-    data.tx = tx;
-    data.rx = rx;
-
-    data.tx[0] = 0x8d;
-    data.tx[1] = 0x00;
-    data.tx[2] = 0x66;
-    data.tx[3] = 0x66;
-    data.length = 4;
-    data.tx_length = 4;
-    spi_send_data(&data);
-
-    cdfinger_camera_read_id();
-
-    /*set camera*/
-//////////////////////   IRQ enable   //////////////////////
-    data.tx[0] = 0x88;
-    data.tx[1] = 0x66;
-    data.tx[2] = 0x66;
-    data.tx[3] = 0x66;
-    data.length = 4;
-    data.tx_length = 4;
-    spi_send_data(&data);
-
-//////////////////////   IRQ clear   //////////////////////
-    data.tx[0] = 0x89;
-    data.tx[1] = 0x66;
-    data.tx[2] = 0x66;
-    data.length = 3;
-    data.tx_length = 3;
-    spi_send_data(&data);
-//////////////////////   SYS   //////////////////////
-#if 1
-printf("please set 0xf8 data:");
-scanf("%d",&data_f8);
-printf("please set 0x02 data:");
-scanf("%d",&data_02);
-i2c_write_data(0xfe,0x80);
-i2c_write_data(0xfe,0x80);
-i2c_write_data(0xfe,0x80);
-i2c_write_data(0xf2,0x00);//sync_pad_io_ebi
-i2c_write_data(0xf6,0x00);//up down
-i2c_write_data(0xfc,0xc6);
-i2c_write_data(0xf7,0x19);//pll enable
-i2c_write_data(0xf8,data_f8);//Pll mode 2
-i2c_write_data(0xf9,0x3e);//[0] pll enable//解决IOVDD 电流大问题
-i2c_write_data(0xfe,0x03);
-i2c_write_data(0x06,0x80);
-i2c_write_data(0x06,0x00);
-i2c_write_data(0xfe,0x00);
-i2c_write_data(0xf9,0x2e);
-i2c_write_data(0xfe,0x00);
-i2c_write_data(0xfa,0x00);//div
-i2c_write_data(0xfe,0x00);
-////////////////   ANALOG & CISCTL   ////////////////
-i2c_write_data(0x03,0x02);
-i2c_write_data(0x04,0x55);
-i2c_write_data(0x05,0x00);
-i2c_write_data(0x06,0xbb);
-i2c_write_data(0x07,0x00);
-i2c_write_data(0x08,0x46);
-i2c_write_data(0x0c,0x04);
-i2c_write_data(0x0d,0x02);
-i2c_write_data(0x0e,0x48);
-i2c_write_data(0x0f,0x03);
-i2c_write_data(0x10,0x08);
-i2c_write_data(0x11,0x23);//44FPN 列异常
-i2c_write_data(0x12,0x10);
-i2c_write_data(0x13,0x11);
-i2c_write_data(0x14,0x01);
-i2c_write_data(0x15,0x00);
-i2c_write_data(0x16,0xc0);
-i2c_write_data(0x17,0x14);
-i2c_write_data(0x18,0x02);
-i2c_write_data(0x19,0x38);
-i2c_write_data(0x1a,0x11);
-i2c_write_data(0x1b,0x06);
-i2c_write_data(0x1c,0x04);
-i2c_write_data(0x1d,0x00);
-i2c_write_data(0x1e,0xfc);
-i2c_write_data(0x1f,0x09);
-i2c_write_data(0x20,0xb5);
-i2c_write_data(0x21,0x3f);
-i2c_write_data(0x22,0xe6);
-i2c_write_data(0x23,0x32);
-i2c_write_data(0x24,0x2f);
-i2c_write_data(0x27,0x00);
-i2c_write_data(0x28,0x00);
-i2c_write_data(0x2a,0x00);
-i2c_write_data(0x2b,0x03);
-i2c_write_data(0x2c,0x00);
-i2c_write_data(0x2d,0x01);
-i2c_write_data(0x2e,0xf0);
-i2c_write_data(0x2f,0x01);
-i2c_write_data(0x25,0xc0);
-i2c_write_data(0x3d,0xe0);
-i2c_write_data(0x3e,0x45);
-i2c_write_data(0x3f,0x1f);
-i2c_write_data(0xc2,0x17);
-i2c_write_data(0x30,0x22);
-i2c_write_data(0x31,0x23);
-i2c_write_data(0x32,0x02);
-i2c_write_data(0x33,0x03);
-i2c_write_data(0x34,0x04);
-i2c_write_data(0x35,0x05);
-i2c_write_data(0x36,0x06);
-i2c_write_data(0x37,0x07);
-i2c_write_data(0x38,0x0f);
-i2c_write_data(0x39,0x17);
-i2c_write_data(0x3a,0x1f);
-//////////////////////   ISP   //////////////////////
-i2c_write_data(0xfe,0x00);
-i2c_write_data(0x8a,0x00);
-i2c_write_data(0x8c,0x07);//07
-i2c_write_data(0x8d,0x03);//0xb8-128  0x38-192
-i2c_write_data(0x8b,0xa2);
-i2c_write_data(0x8e,0x02);//luma value not normal
-i2c_write_data(0x90,0x01);
-i2c_write_data(0x94,0x02);
-i2c_write_data(0x95,0x02);
-i2c_write_data(0x96,0x40);
-i2c_write_data(0x97,0x03);
-i2c_write_data(0x98,0x00);
-//////////////////////	 BLK	/////////////////////
-i2c_write_data(0xfe,0x00);
-i2c_write_data(0x18,0x02);
-i2c_write_data(0x40,0x22);
-i2c_write_data(0x41,0x01);
-i2c_write_data(0x5e,0x00);
-i2c_write_data(0x66,0x20);
-//////////////////////	 MIPI	/////////////////////
-i2c_write_data(0xfe,0x03);
-i2c_write_data(0x01,0x83);
-i2c_write_data(0x02,data_02);
-i2c_write_data(0x03,0x96);
-i2c_write_data(0x04,0x01);
-i2c_write_data(0x05,0x00);
-i2c_write_data(0x06,0xa4);
-i2c_write_data(0x10,0x90);
-i2c_write_data(0x11,0x2b);
-i2c_write_data(0x12,0xc0);
-i2c_write_data(0x13,0x03);
-i2c_write_data(0x15,0x02);
-i2c_write_data(0x21,0x10);
-i2c_write_data(0x22,0x03);
-i2c_write_data(0x23,0x20);
-i2c_write_data(0x24,0x02);
-i2c_write_data(0x25,0x10);
-i2c_write_data(0x26,0x05);
-i2c_write_data(0x21,0x10);
-i2c_write_data(0x29,0x03);
-i2c_write_data(0x2a,0x0a);
-i2c_write_data(0x2b,0x04);
-i2c_write_data(0xfe,0x00);
-i2c_write_data(0xb0,0x50);
-i2c_write_data(0xb6,0x00);
-printf("camera init done\n\n\n");
-#endif
-
-    data.tx[0] = 0x88;
-    data.tx[1] = 0x66;
-    data.tx[2] = 0x66;
-    data.tx[3] = 0x66;
-    data.length = 4;
-    data.tx_length = 4;
-    spi_send_data(&data);
-    //sleep(10);
-    //get_pictures();
-}
-
 void update_background_image(void){
     
 }
@@ -615,28 +457,13 @@ int get_pictures(void)
 　　 memset(error_img,0,sizeof(struct img_error_data)*p_count*384*258);
 #endif
     while(p_count--){
-            //sleep(2);
-    //printf("pictures p_count=%d:\n",p_count);
-
-    //printf("send 0x8d/02 for standby \n");
-    data.tx[0] = 0x8d;
-    data.tx[1] = 0x02;
-    data.tx[2] = 0x66;
-    data.tx[3] = 0x66;
-    data.length = 4;
-    data.tx_length = 4;
-    spi_send_data(&data);
-    //printf("0x8d:0x%02x  0x%02x  0x%02x  0x%02x \n",data.rx[0],data.rx[1],data.rx[2],data.rx[3]);
-
-    //printf("send 0x8d/40  wait interrupt \n");
-    data.tx[0] = 0x8d;
-    data.tx[1] = 0x40;
-    data.tx[2] = 0x66;
-    data.tx[3] = 0x66;
-    data.length = 4;
-    data.tx_length = 4;
-    spi_send_data(&data);
-    //printf("0x8d:0x%02x  0x%02x  0x%02x  0x%02x \n",data.rx[0],data.rx[1],data.rx[2],data.rx[3]);
+        data.tx[0] = 0x8d;
+        data.tx[1] = 0x40;
+        data.tx[2] = 0x66;
+        data.tx[3] = 0x66;
+        data.length = 4;
+        data.tx_length = 4;
+        spi_send_data(&data);
 
         memset(data.tx, 0x66, (CMOS_BUFFER_SIZE));
         memset(data.rx, 0x00, (CMOS_BUFFER_SIZE));
@@ -651,15 +478,15 @@ int get_pictures(void)
         ret = WaitSemCall();
         if(ret == -1){
             //return -1;
-            printf("send cpld cmd make cpld reset to resurrect!!\n");
-            cpld_rst++;
-            data.tx[0] = 0xf0;
-            data.tx[1] = 0x66;
-            data.tx[2] = 0x66;
-            data.tx[3] = 0x66;
-            data.length = 4;
-            data.tx_length = 4;
-            spi_send_data(&data);
+            // printf("send cpld cmd make cpld reset to resurrect!!\n");
+            // cpld_rst++;
+            // data.tx[0] = 0xf0;
+            // data.tx[1] = 0x66;
+            // data.tx[2] = 0x66;
+            // data.tx[3] = 0x66;
+            // data.length = 4;
+            // data.tx_length = 4;
+            // spi_send_data(&data);
             break;
         }
 #endif
@@ -672,26 +499,14 @@ int get_pictures(void)
             t2 = t0;
         printf("Capturing the %dth picture takes %lld ms,average time=%lld, MAX time = %lld ms,MIN time = %lld ms\n",img_num,t0,SUM_time/img_num,t1,t2);
 
-        //printf("0x8d:0x%02x  0x%02x  0x%02x  0x%02x \n",data.rx[0],data.rx[1],data.rx[2],data.rx[3]);
-        // j = 0;
-        // for(i=3;i<CMOS_BUFFER_SIZE;i+=3){
-        //    img_data[j] = (data.rx[i] | (data.rx[i+1]<<8))&0x0fff;
-        //    img_data[j+1] = ((data.rx[i+1]>>4) | (data.rx[i+2]<<4))&0x0fff;
-        //    j += 2;
-        // }
-        //printf("Capturing a picture takes %d ms\n",cfp_get_uptime() - t0);
-
-        // for(i=0;i<100;++i){
-        //     printf("data.rx[%d]=0x%02x\n",i,data.rx[i]);
-        // }
-
-        j = 0;
-        for(i=3;i<CMOS_BUFFER_SIZE;i+=5){
-           img_data[j] = (data.rx[i] | (data.rx[i+1]<<8))&0x03ff;
-           img_data[j+1] = ((data.rx[i+1]>>2) | (data.rx[i+2]<<6))&0x03ff;
-           img_data[j+2] = ((data.rx[i+2]>>4) | (data.rx[i+3]<<4))&0x03ff;
-           img_data[j+3] = ((data.rx[i+3]>>6) | (data.rx[i+4]<<2))&0x03ff;
-           j += 4;
+        for (i = 0; i < (CMOS_BUFFER_SIZE - 3) / 5; ++i)
+        {
+            m_bit_p = (struct m_bit *)(data.rx + 3 + i * 5);
+            img_data[j] = m_bit_p->a << 2;
+            img_data[j + 1] = m_bit_p->b << 2;
+            img_data[j + 2] = m_bit_p->c << 2;
+            img_data[j + 3] = m_bit_p->d << 2;
+            j += 4;
         }
 
         //printf("send 0x8d/02 for standby \n");
@@ -702,25 +517,12 @@ int get_pictures(void)
         data.length = 4;
         data.tx_length = 4;
         spi_send_data(&data);
-        //printf("j=%d\n",j);
-        // for(i=0;i<224;i++)
-        //     printf("data.rx[%d]=0x%02x    ",i,data.rx[i]);
-        // printf("\n");
-
-        // j = 0;
-        // for(i=0;i<CMOS_BUFFER_SIZE;i+=5){
-        //     m_bit_p = (struct m_bit *)&data.rx[i];
-        //    img_data[j] = m_bit_p->a;
-        //    img_data[j+1] = m_bit_p->b;
-        //    img_data[j+2] = m_bit_p->c;
-        //    img_data[j+3] = m_bit_p->d;
-        //    j += 4;
-        // }
+       
         for(i=0;i<WIDTH*HIGHT;i++){
-            data.rx[i] = (uint8_t)(img_data[i]>>2);
+            data.rx[i] = (uint8_t)(img_data[i]>>4);
             //if(i < 10)
             //printf("img[%d]=0x%04x\n",i,img_data[i]);//1100 0000 0000
-            if(data.rx[i]!= 0x80){
+            if(data.rx[i]!= 0xc0){
                 error = 1;
  #ifdef PRINTF_ERROR_PIXEL
                 error_img[pixel_error].img_num = img_num;
@@ -728,7 +530,7 @@ int get_pictures(void)
                 error_img[pixel_error].data_rx = data.rx[i];
                 error_img[pixel_error].img_data = img_data[i];
  #endif
-               printf("compare with 0xc0,the %dth img data error!!data.rx[%d]=0x%04x!!img_data[%d]=0x%04x\n",img_num,i,data.rx[i],i,img_data[i]);
+            //    printf("compare with 0xc0,the %dth img data error!!data.rx[%d]=0x%04x!!img_data[%d]=0x%04x\n",img_num,i,data.rx[i],i,img_data[i]);
                 pixel_error++;
                 //exit(1);
             }
@@ -759,221 +561,201 @@ int get_pictures(void)
     return 0;
 }
 
-
-// int get_pictures(void){
-//     /*test full buffer mode*/
-//     long i = 0;
-//     long j = 0;
-//     long x = 0;
-//     long y = 0;
-//     long z = 0;
-//     long pixel_count = 0;
-//     int ret = 0;
-//     int num_of_aa = 0;
-//     int k = 0;
-//     long long t0 = 0;
-//     long number_of_default = 0;
-//     int t_num = 0;
-//     uint16_t pic_data_12[224*224];
-//     uint8_t pic_data_8[224*224];
-//     cdfinger_spi_data *data = malloc(sizeof(cdfinger_spi_data));
-//     uint8_t *cdfinger_pic_data = malloc(sizeof(unsigned char)*CMOS_BUFFER_SIZE);
-//     data->tx = malloc(sizeof(unsigned char)*CMOS_BUFFER_SIZE);
-//     if(data == NULL || data->tx == NULL || cdfinger_pic_data == NULL){
-//         printf("malloc default=====>cmos.c\n");
-//         return -1;
-//     }
-//     data->rx = cdfinger_pic_data;
-
-// retry:
-//     printf("how many pictures do you want(enter 999 go back):");
-//     scanf("%d",&i);
-//     printf("\n");
-//     number_of_default=0;
-
-//     int fg = 0;
-//     if(fg){
-//         while(i > 0){
-//             i--;
-//             j++;
-//             printf("picture %ld~\n",j);
-            
-//             ioctl(m_fd,CDFINGER_HW_RESET);
-        
-//             memset(data->tx, 0x66, (CMOS_BUFFER_SIZE));
-//             memset(data->rx, 0x00, (CMOS_BUFFER_SIZE));
-//             data->tx[0]     = 0x8a;
-//             data->length    = CMOS_BUFFER_SIZE;
-//             data->tx_length = CMOS_BUFFER_SIZE;  
-
-//             t0 = cfp_get_uptime(); 
-//             cdfinger_camera_capture();
-//             usleep(27*1000);             
-//             spi_send_data(data);
-//             printf("Capturing a picture takes %d ms\n",cfp_get_uptime() - t0);
-
-//             x = 0;
-//             z = 0;
-//             t_num = 0;
-//             memset(pic_data_8,0x00,224*224);
-//             for(num_of_aa = 0; num_of_aa < 224&&x<CMOS_BUFFER_SIZE-336;){            
-//                 if(cdfinger_pic_data[x] == 0xaa){
-//                     num_of_aa++;
-//                     for(y = x+1; y < x+337; y += 3){
-//                         pic_data_12[z] = ((data->rx[y+1]<<8)&0x0f00) | ((data->rx[y])&0x00ff);
-//                         pic_data_8[z] = (uint8_t)(pic_data_12[z]>>4);
-//                         z++;
-//                         pic_data_12[z] = ((data->rx[y+1]>>4)&0x000f) | (((data->rx[y+2])<<4)&0x0ff0);
-//                         pic_data_8[z] = (uint8_t)(pic_data_12[z]>>4);
-//                         z++;
-//                     }
-//                     x+=336;     
-//                 }else{
-//                     x++;
-//                 }
-//             }        
-//             printf("\n");
-//             printf("num_of_aa = %d\n",num_of_aa);
-//             if(num_of_aa!=224){
-//                 number_of_default++;
-//                 printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-//                 //exit(1);
-//                 //goto retry;
-//                 // if(number_of_default==9)
-//                 //    break;
-//             }
-
-//             // int my_i;
-//             // for(my_i=0;my_i<224*224;my_i++){
-//             //     if(pic_data_12[my_i]!=dig){
-//             //         t_num++;
-//             //         printf("dig ================= 0x%04x\n",dig);
-//             //         printf("n=%d    data[%d]=0x%04x\n",t_num,my_i,pic_data_12[my_i]);
-//             //     }
-//             // }
-//             // if(t_num!=0)
-//             //     exit(1);
-//             draw_image(HIGHT,WIDTH,pic_data_8,NULL);
-//             printf("number of default = %ld\n",number_of_default);
-
-//             printf("dig ================= 0x%04x\n",dig);
-//         }
-//     }else{
-//         while(i > 0){
-//             i--;
-//             j++;
-//             printf("picture %ld~\n",j);
-            
-//             ioctl(m_fd,CDFINGER_HW_RESET);
-
-//             data->rx = cdfinger_pic_data;
-//             memset(data->tx, 0x66, (CMOS_BUFFER_SIZE));
-//             memset(data->rx, 0x00, (CMOS_BUFFER_SIZE));
-//             data->tx[0]     = 0x8a;
-//             data->length    = CMOS_BUFFER_SIZE;
-//             data->tx_length = CMOS_BUFFER_SIZE;  
-
-//             t0 = cfp_get_uptime(); 
-//             //cdfinger_camera_capture();
-//             ret = WaitSemCall();
-//             if(ret == -1){
-//                 return -1;
-//             }
-
-//             memset(data->rx,0x00,CMOS_BUFFER_SIZE);
-//             //ret = read(m_fd,data->rx,CMOS_BUFFER_SIZE);
-//             spi_send_data(data);
-        
-//             printf("Capturing a picture takes %d ms\n",cfp_get_uptime() - t0);
-        
-//             x = 0;
-//             z = 0;
-//             t_num = 0;
-//             memset(pic_data_8,0x00,sizeof(pic_data_8));
-//             memset(pic_data_12,0x00,sizeof(pic_data_12));
-//             for(num_of_aa = 0; num_of_aa < 224&&x<CMOS_BUFFER_SIZE-336;){            
-//                 if(cdfinger_pic_data[x] == 0xaa){
-//                 // printf("0x%02x  0x%02x  0x%02x  0x%02x\n",cdfinger_pic_data[x-3],cdfinger_pic_data[x-2],cdfinger_pic_data[x-1],cdfinger_pic_data[x]);
-//                     num_of_aa++;
-//                     for(y = x+1; y < x+337; y += 3){
-//                         pic_data_12[z] = ((data->rx[y+1]<<8)&0x0f00) | ((data->rx[y])&0x00ff);
-//                         pic_data_8[z] = (uint8_t)(pic_data_12[z]>>4);
-//                         z++;
-//                         pic_data_12[z] = ((data->rx[y+1]>>4)&0x000f) | (((data->rx[y+2])<<4)&0x0ff0);
-//                         pic_data_8[z] = (uint8_t)(pic_data_12[z]>>4);
-//                         z++;
-//                     }
-//                     x+=336;           
-//                 }else{
-//                     x++; 
-//                 }
-//             }
-//             printf("\n");
-//             printf("num_of_aa = %d\n",num_of_aa);
-//             if(num_of_aa!=224){
-//                 number_of_default++;
-//                 printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-//                 //exit(1);
-//                 //goto retry;
-//                 // if(number_of_default==9)
-//                 break;
-//             }
-//             // for(i=0;i<224*224;i++){
-//             //     if(pic_data_12[i]!=dig){
-//             //         t_num++;
-//             //         printf("dig ================= 0x%04x\n",dig);
-//             //         printf("n=%d    data[%d]=0x%04x\n",t_num,i,pic_data_12[i]);
-//             //     }
-//             // }
-//             // if(t_num!=0)
-//             //      exit(1);
-//             draw_image(HIGHT,WIDTH,pic_data_8,NULL);
-//             printf("number of default = %ld\n",number_of_default);
-//         }
-//     }
-//     free(data->tx);
-//     free(cdfinger_pic_data);
-//     free(data);
-// }
-
 void move_picture(void){
     
 }
 
-void change_exposure_time(void){
-
+static void send_clk(int clk_count)
+{
+    for (int i = 0; i < clk_count; ++i)
+    {
+        ioctl(m_fd, CDFINGER_CONTROL_CLK, 0);
+        usleep(1000);
+        ioctl(m_fd, CDFINGER_CONTROL_CLK, 1);
+        usleep(1000);
+    }
 }
 
-void set_reg(void)
+static int spi_send_data_m(unsigned char *tx, unsigned char *rx, int len)
 {
-    uint8_t reg = 0;
-    uint8_t val = 0;
-    printf("please input the regadress and value: \n");
-    scanf("%x %x",&reg,&val);
-    printf("reg=%02x,val=%02x\n",reg,val);
-    i2c_write_data(reg,val);
-    printf("read val = %02x\n",i2c_read_data(reg));
+    int ret = -1;
+    cdfinger_spi_data data;
+
+    data.tx = tx;
+    data.rx = rx;
+    data.length = len;
+    data.tx_length = len;
+
+    ret = ioctl(m_fd, CDFINGER_SPI_WRITE_AND_READ, &data);
+    if (ret != 0)
+    {
+        printf("spi send data is error!!!\n");
+    }
+
+    return ret;
+}
+
+void close_cpld1(void){
+    uint8_t tx[8] = {0};
+    uint8_t rx[8] = {0};
+
+    memset(tx, 0x66, 8);
+    memset(rx, 0x66, 8);
+    tx[0] = 0x8d;
+    tx[1] = 0x20;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    spi_send_data_m(tx,rx,4);
+    
     return;
 }
 
-void config_flash(void){
-    uint8_t w_data[1024*100] = {0};
-    uint8_t r_data[1024*100] = {0};
-    int i = 0;
-    int len = 87250;
-    for(i=0;i<len;i++)
-        w_data[i] = i;
+void close_cpld2(void)
+{
+    uint8_t tx[8] = {0};
+    uint8_t rx[8] = {0};
 
+    memset(tx, 0x66, 8);
+    memset(rx, 0x66, 8);
+    tx[0] = 0x8d;
+    tx[1] = 0x10;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    spi_send_data_m(tx,rx,4);
     
+    return;
+}
 
-    page_program_size(0x10000, w_data, len);
-    read_flash(0x03,0x10000,r_data, len);
+int checkUpdate()
+{
+    uint8_t tx[8] = {0};
+    uint8_t rx[8] = {0};
 
-    for(i=0;i<len;i++){
-        if(r_data[i] != w_data[i]){
-            printf("data error!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    memset(tx, 0x66, 8);
+    memset(rx, 0x66, 8);
+    tx[0] = 0x8e;
+    tx[1] = 0x66;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    spi_send_data_m(tx,rx,8);
+    for (int i = 0; i < 8; i++)
+    {
+        printf("rx[%d]=%x ", i, rx[i]);
+    }
+    printf("\n");
+
+    if (rx[4] != 0x20)
+    {
+        printf("==============downloader program fail=================\n");
+    }
+
+    return 0;
+}
+
+static int sensor_setFrameNum(uint32_t count)
+{
+    unsigned char tx[4] = {0};
+    unsigned char rx[4] = {0};
+
+    tx[0] = 0x90;
+    tx[1] = count;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    if (spi_send_data_m(tx, rx, 4) < 0)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+static int sensor_init(void)
+{
+    /*read id*/
+    unsigned char tx[10] = {0};
+    unsigned char rx[10] = {0};
+    int reg_count = 0;
+    int ret = 0;
+    int i = 0;
+
+    //////////////////////   reset cpld   //////////////////////
+    tx[0] = 0xf0;
+    tx[1] = 0x66;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    if (spi_send_data_m(tx, rx, 4) < 0)
+    {
+        return -1;
+    }
+
+    tx[0] = 0x8d;
+    tx[1] = 0x00;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    if (spi_send_data_m(tx, rx, 4) < 0)
+    {
+        return -1;
+    }
+
+    /*set camera*/
+    //////////////////////   IRQ enable   //////////////////////
+    tx[0] = 0x88;
+    tx[1] = 0x66;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    if (spi_send_data_m(tx, rx, 4) < 0)
+    {
+        return -1;
+    }
+
+    //////////////////////   IRQ clear   //////////////////////
+    tx[0] = 0x89;
+    tx[1] = 0x66;
+    tx[2] = 0x66;
+    if (spi_send_data_m(tx, rx, 3) < 0)
+    {
+        return -1;
+    }
+
+    unsigned char sensor_id = 0;
+    sensor_id = i2c_read_data(0xf0);
+    printf("sensor id = 0x%02x\n",sensor_id);
+    if ((ret < 0) || (sensor_id != 0x04))
+    {
+        printf("fps7001_gc0403 read id failed! ret = %d, id = 0x%02x\n", ret, sensor_id);
+        return -1;
+    }
+
+    reg_count = sizeof(SENSOR_INIT_CONF) / 2;
+    printf("the reg_count = %d\n", reg_count);
+    for (i = 0; i < reg_count; i++)
+    {
+        if (i2c_write_data(SENSOR_INIT_CONF[i][0], SENSOR_INIT_CONF[i][1]) == -1)
+        {
+            printf("i2c write data error\n");
+            return -1;
         }
     }
+
+    tx[0] = 0x88;
+    tx[1] = 0x66;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    if (spi_send_data_m(tx, rx, 4) < 0)
+    {
+        return -1;
+    }
+    // sensor_setFrameNum(4);
+
+    return 0;
+}
+
+void cmos_init(void){
+   int ret = sensor_init();
+   if(ret < 0){
+       printf("sensor_init failed!!!!!!!!\n");
+       return;
+   }
 }
 
 void ProgrammingRawCode(void)
@@ -1001,70 +783,87 @@ void ProgrammingRawCode(void)
   // ioctl(m_fd,CDFINGER_SPI_ACTIVE);
  //  usleep(200*1000);
   //  ioctl(m_fd,CDFINGER_SPI_ACTIVE);
-    int i = 0;
-    cdfinger_spi_data data;
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,0);
-    ioctl(m_fd,CDFINGER_CONTROL_CS,0);
-    ioctl(m_fd,CDFINGER_CONTROL_CLK,1);
-    usleep(1000);
-    ioctl(m_fd,CDFINGER_CONTROL_RESET,1);
-    usleep(1000);
-    ioctl(m_fd,CDFINGER_CONTROL_CS,1);
-    ioctl(m_fd,CDFINGER_SPI_MODE,4);
-    uint8_t t[1] = {0};
-    uint8_t r[1] = {0};
-    data.tx = t;
-    data.rx = r;
-    data.length = 1;
-    data.tx_length = 1;
-    spi_send_data(&data);
 
-    ioctl(m_fd,CDFINGER_SPI_MODE,3);
 
-    uint8_t *ptr = NULL,*re = NULL;
-    int ret = 0;
-    int num = 0;
-    char cpld_path[128];
-    sprintf(cpld_path,"%s/%s","/data",CPLD_FILE_NAME);
-    printf("download cpld bin file from path=%s\n",cpld_path);
-    FILE *fp=fopen(cpld_path,"rb+");
-    if(fp == NULL){
-        printf("open file error\n");
-        exit(1);
+    // send_sclk(100);
+    // ioctl(m_fd,CDFINGER_CONTROL_CS,0);
+    // ioctl(m_fd,CDFINGER_CONTROL_CLK,0);
+    // ioctl(m_fd,CDFINGER_HW_RESET,0);
+    // usleep(100);
+    // ioctl(m_fd,CDFINGER_CONTROL_CS,1);
+    // ioctl(m_fd,CDFINGER_CONTROL_CLK,1);
+    // ioctl(m_fd,CDFINGER_HW_RESET,1);
+
+
+    int i = 0, length = 0, ret = -1;
+    unsigned char *tx = NULL;
+    unsigned char *rx = NULL;
+
+    FILE *fp = fopen("/data/cpld.bin", "rb+");
+    if (fp == NULL)
+    {
+        printf("open file error \n");
+        goto out;
+    }
+    fseek(fp, 0L, SEEK_END);
+    length = ftell(fp);
+    printf("bin file length = %d \n", length);
+    fseek(fp, 0L, SEEK_SET);
+    tx = (unsigned char *)malloc(length);
+    if (tx == NULL)
+    {
+        printf("malloc failed,data.tx==FULL!!!\n");
+        goto out;
+    }
+    rx = (unsigned char *)malloc(length);
+    if (rx == NULL)
+    {
+        printf("malloc failed,data.rx==FULL!!!\n");
+        goto out;
     }
 
-    fseek(fp,0L,SEEK_END);
-    num = ftell(fp);
-    printf("bin file name=%s ,num = %d\n",CPLD_FILE_NAME,num);
-    fseek(fp,0L,SEEK_SET);
-    ptr=(uint8_t *)malloc(sizeof(uint8_t)*num);
-    re=(uint8_t *)malloc(sizeof(uint8_t)*num);
-    ret = fread(ptr,sizeof(uint8_t),num,fp);
-    if(ret != num){
+    ioctl(m_fd, CDFINGER_HW_RESET, 0);
+    ioctl(m_fd, CDFINGER_CONTROL_CS, 0);
+    ioctl(m_fd, CDFINGER_CONTROL_CLK, 1);
+    usleep(1000);
+    ioctl(m_fd, CDFINGER_HW_RESET, 1);
+    usleep(1000);
+    ioctl(m_fd, CDFINGER_CONTROL_CS, 1);
+
+    send_clk(8);
+    
+    ioctl(m_fd, CDFINGER_INIT_GPIO);
+    ioctl(m_fd, CDFINGER_SPI_MODE, 3);
+
+    ret = fread(tx, sizeof(uint8_t), length, fp);
+    if (ret != length)
+    {
         printf("fread error!!!!!!!!!!!!!!!!!!!!!!!\n");
-        exit(1);
+        ret = -1;
+        goto out;
     }
 
-    data.tx = ptr;
-    data.rx = re;
+    if (spi_send_data_m(tx, rx, length) < 0)
+    {
+        ret = -1;
+        goto out;
+    }
 
-    data.length = num;
-    data.tx_length = num;
-    spi_send_data(&data);
+    send_clk(200);
 
-    ioctl(m_fd,CDFINGER_SPI_MODE,4);
+    ioctl(m_fd, CDFINGER_INIT_GPIO);
+    ioctl(m_fd, CDFINGER_SPI_MODE, 0);
 
-    memset(ptr,0,num);
-    data.length = 150;
-    data.tx_length = 150;
-    spi_send_data(&data);
+    ret = 0;
+out:
+    if (tx != NULL)
+        free(tx);
+    if (rx != NULL)
+        free(rx);
+    if (fp != NULL)
+        fclose(fp);
+    return;
 
-    usleep(100*1000);
-    ioctl(m_fd,CDFINGER_SPI_MODE,0);
-
-    free(ptr);
-    free(re);
-    fclose(fp);
 }
 
 void check_busy(void)
@@ -1406,17 +1205,6 @@ void VerifyNVCMMainArrays(void)
         
 
         usleep(8);
-    }
-}
-
-void send_sclk(int count)
-{
-    int i = 0;
-    for(i=0;i<count;++i){
-        ioctl(m_fd,CDFINGER_CONTROL_CLK,0);
-        usleep(1);
-        ioctl(m_fd,CDFINGER_CONTROL_CLK,1);
-        usleep(1);
     }
 }
 
@@ -1816,18 +1604,106 @@ out:
     return;
 }
 
+int selectP2()
+{
+    uint8_t tx[8] = {0};
+    uint8_t rx[8] = {0};
+
+    memset(tx, 0x66, 8);
+    memset(rx, 0x66, 8);
+    tx[0] = 0x8d;
+    tx[1] = 0x80;
+    tx[2] = 0x66;
+    tx[3] = 0x66;
+    spi_send_data_m(tx,rx,4);
+    for (int i = 0; i < 8; i++)
+    {
+        printf("rx[%d]=%x ", i, rx[i]);
+    }
+    printf("\n");
+
+    if (rx[4] != 0x20)
+    {
+        printf("==============downloader program fail=================\n");
+    }
+
+    return 0;
+}
+
 
 void cpld_test(void)
 {
-    uint32_t count = 0,i = 0;
-    printf("how many counts do you want test cpld:");
-    scanf("%d",&count);
-    while(count--){
-    i++;
-    printf("**********************the %dth cpld test**********************\n",i);
-    ProgrammingRawCode();
-    cmos_init();
-    sleep(3);
+   int i = 0, length = 0, ret = -1;
+    unsigned char *tx = NULL;
+    unsigned char *rx = NULL;
+
+    selectP2();
+
+    usleep(1000*4000);
+
+    FILE *fp = fopen("/data/cpld.bin", "rb+");
+    if (fp == NULL)
+    {
+        printf("open file error \n");
+        goto out;
     }
-    printf("cpld test success!!!!\n");
+    fseek(fp, 0L, SEEK_END);
+    length = ftell(fp);
+    printf("bin file length = %d \n", length);
+    fseek(fp, 0L, SEEK_SET);
+    tx = (unsigned char *)malloc(length);
+    if (tx == NULL)
+    {
+        printf("malloc failed,data.tx==FULL!!!\n");
+        goto out;
+    }
+    rx = (unsigned char *)malloc(length);
+    if (rx == NULL)
+    {
+        printf("malloc failed,data.rx==FULL!!!\n");
+        goto out;
+    }
+
+    // /ioctl(m_fd, CDFINGER_HW_RESET, 0);
+    ioctl(m_fd, CDFINGER_CONTROL_CS, 0);
+    ioctl(m_fd, CDFINGER_CONTROL_CLK, 1);
+    usleep(1000);
+    // ioctl(m_fd, CDFINGER_HW_RESET, 1);
+    usleep(1000);
+    ioctl(m_fd, CDFINGER_CONTROL_CS, 1);
+
+    send_clk(8);
+    
+    ioctl(m_fd, CDFINGER_INIT_GPIO);
+    ioctl(m_fd, CDFINGER_SPI_MODE, 3);
+
+    ret = fread(tx, sizeof(uint8_t), length, fp);
+    if (ret != length)
+    {
+        printf("fread error!!!!!!!!!!!!!!!!!!!!!!!\n");
+        ret = -1;
+        goto out;
+    }
+
+    if (spi_send_data_m(tx, rx, length) < 0)
+    {
+        ret = -1;
+        goto out;
+    }
+
+    send_clk(200);
+
+    ioctl(m_fd, CDFINGER_INIT_GPIO);
+    ioctl(m_fd, CDFINGER_SPI_MODE, 0);
+
+    ret = 0;
+out:
+    if (tx != NULL)
+        free(tx);
+    if (rx != NULL)
+        free(rx);
+    if (fp != NULL)
+        fclose(fp);
+    return;
+
 }

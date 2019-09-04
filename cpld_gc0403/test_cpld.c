@@ -45,7 +45,7 @@ int main(void)
         }else{
             switch(atoi(order)){
                 case 1:{
-                    update_background_image();
+                    checkUpdate();
                     break;
                 }
                 case 2:{
@@ -57,11 +57,11 @@ int main(void)
                     break;
                 }
                 case 4:{
-                    change_exposure_time();
+                    close_cpld1();
                     break;
                 }
                 case 5:{
-                    config_flash();
+                    close_cpld2();
                     break;
                 }
                 case 6:{
@@ -73,7 +73,7 @@ int main(void)
                     break;
                 }
                 case 8:{
-                    set_reg();
+                    // set_reg();
                     break;
                 }
                 case 9:{
