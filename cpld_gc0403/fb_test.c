@@ -27,8 +27,8 @@
 
 #include <linux/fb.h>
 #include <linux/kd.h>
-#define RESIZE 1
-#define RESIZE_W 1
+#define RESIZE 4
+#define RESIZE_W 4
 #define  Up_amplify 20
 
 struct simple_fb {

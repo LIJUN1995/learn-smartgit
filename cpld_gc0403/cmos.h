@@ -10,8 +10,8 @@
 #define FULL_WIDTH              4000//摄像头原图的宽长字节数
 #define FULL_HIGHT              800//摄像头原图的高长字节数
 #define EXP_TIME                25//曝光时间
-#define WIDTH                   128//在原图基础上裁剪的宽长字节数
-#define HIGHT                   96//在原图基础上裁剪的高长字节数
+#define WIDTH                   96//在原图基础上裁剪的宽长字节数
+#define HIGHT                   72//在原图基础上裁剪的高长字节数
 #define WIDTH_AFTERPROCESS      224//224//经过NAVI_MATRESIZE函数后的宽长字节数
 #define HIGHT_AFTERPROCESS      224//224//经过NAVI_MATRESIZE函数后的高长字节数
 #define X                       425//裁剪的起始行上坐标

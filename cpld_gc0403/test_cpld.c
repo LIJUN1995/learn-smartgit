@@ -53,7 +53,8 @@ int main(void)
                     break;
                 }
                 case 3:{
-                    cpld_test();
+                    selectP2();
+                    // cpld_test();
                     break;
                 }
                 case 4:{
@@ -73,11 +74,17 @@ int main(void)
                     break;
                 }
                 case 8:{
-                    // set_reg();
+                    get_two_picture();
                     break;
                 }
                 case 9:{
                     programming_NVCM();
+                    break;
+                }
+                case 10:{
+                    int exp_time = 0;
+                    scanf("%d",&exp_time);
+                    sensor_setExpoTime(exp_time);
                     break;
                 }
                 default:{

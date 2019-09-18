@@ -45,10 +45,7 @@ int WaitSemCall(void)
     while (semcnts >= 1) {
         sem_wait(&g_down_sem);
         sem_getvalue(&g_down_sem, &semcnts);
-        //printf("semcnts2 = %d\n", semcnts);
     }
-
-    //cdfinger_camera_capture();
 
     while ((ret = func_sem_timedwait(&g_down_sem)) == -1 && errno == EINTR)
         continue; /* Restart if interrupted by handler */
