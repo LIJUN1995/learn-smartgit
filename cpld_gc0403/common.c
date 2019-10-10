@@ -12,7 +12,7 @@ int m_fd = -1;
 
 int OpenDeviceFile(char *dir)
 {
-    m_fd = open("/dev/fpsdev0", O_RDWR);
+    m_fd = open(dir, O_RDWR);
 	if (m_fd < 0) {
 		printf("open device failed!\n");
 		return m_fd;

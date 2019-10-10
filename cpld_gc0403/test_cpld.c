@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include "cmos.h"
 #include <sys/time.h>
-       #include <sys/resource.h>
+#include <sys/resource.h>
 #include <sched.h>
 #include "common.h"
+
 int main(void)
 {
     int ret = 0;
@@ -15,6 +16,18 @@ int main(void)
         return ret;
     }
     DeviceInit();
+    ProgrammingRawCode();
+
+    char id = i2c_read_data(0xf0);
+
+    printf("!!!!!!!!!!!!!!  id = 0x%02x\n",id);
+
+    cmos_init();
+    close_cpld1();
+    cmos_init();
+    close_cpld2();
+    get_two_picture();
+    goto out;
 
     while(1){
         printf("\n\n\n");
@@ -94,6 +107,7 @@ int main(void)
             }
         }
     }
+out:
     CloseDeviceFile();
     return 0;
 }

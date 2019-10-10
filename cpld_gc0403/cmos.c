@@ -451,7 +451,7 @@ static int spi_send_data_m(unsigned char *tx, unsigned char *rx, int len)
     return ret;
 }
 
-int checkUpdate()
+static int checkUpdate()
 {
     uint8_t tx[8] = {0};
     uint8_t rx[8] = {0};
@@ -643,7 +643,8 @@ int get_two_picture(void){
     long long t0=0,t1=0,t2=0;
     cdfinger_spi_data data;
     unsigned short *img_data = (unsigned short *)malloc(2*WIDTH*HIGHT);
-    unsigned char *img = (unsigned char *)malloc(WIDTH*HIGHT);
+    unsigned char *img1 = (unsigned char *)malloc(WIDTH*HIGHT);
+    unsigned char *img2 = (unsigned char *)malloc(WIDTH*HIGHT);
     data.rx = (unsigned char *)malloc(CMOS_BUFFER_SIZE);
     data.tx = (unsigned char *)malloc(CMOS_BUFFER_SIZE);
 
@@ -692,11 +693,8 @@ int get_two_picture(void){
         }
        
         for(i=0;i<WIDTH*HIGHT;i++){
-            img[i] = (uint8_t)(img_data[i]>>2);
+            img1[i] = (uint8_t)(img_data[i]>>2);
         }
-        draw_image(WIDTH,HIGHT,img,NULL);
-
-        // usleep(1000*100);
 
         t0 = cfp_get_uptime(); 
         close_cpld1();
@@ -721,18 +719,19 @@ int get_two_picture(void){
         }
        
         for(i=0;i<WIDTH*HIGHT;i++){
-            img[i] = (uint8_t)(img_data[i]>>2);
+            img2[i] = (uint8_t)(img_data[i]>>2);
         }
-        draw_image(WIDTH,HIGHT,img,NULL);
+        draw_image(WIDTH,HIGHT,img1,img2);
 
         close_cpld2();
-        // usleep(1000*500);
         printf("img_num=%d,     err_num=%d\n",++img_num,err_num);
     }
 
     free(data.rx);
     free(data.tx);
     free(img_data);
+    free(img1);
+    free(img2);
 
     return 0;
 }
