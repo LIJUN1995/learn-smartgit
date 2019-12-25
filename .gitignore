@@ -4,3 +4,4 @@
 /out/
 /Documentation/
 *.o.d
+qt_test_camera

@@ -35,6 +35,7 @@ enum {
     READ_REG_VALUE, 
     GET_IMG,
     EXIT_CMD,
+    BRUSH_IMG,
 };
 
 
@@ -436,14 +437,12 @@ int main(int argc, char *argv[])
     }
     memset(socket_info,0X00,sizeof(SOCKET_INFO));
 
-    imgbuff = (unsigned short *)malloc(SENSOR_WIDTH*SENSOR_HEIGHT*2);
+    imgbuff = (unsigned short *)malloc(SENSOR_WIDTH*SENSOR_HEIGHT*2+4);
     if(imgbuff == NULL){
         printf("malloc imgbuff failed\n");
         goto OUT;
     }
-    memset(imgbuff,0X00,SENSOR_WIDTH*SENSOR_HEIGHT*2);
-
-    unsigned char buf[240*160+4] = {0};
+    memset(imgbuff,0X00,SENSOR_WIDTH*SENSOR_HEIGHT*2+4);
 
     while(1){     
         ret = recv(client_sockfd, socket_info, sizeof(SOCKET_INFO), 0);
@@ -452,9 +451,6 @@ int main(int argc, char *argv[])
             printf("TCP Connection interruption\n");
             break;
         }
-        // sprintf(buff,"hello, lijun", 1024);
-        // ret = send(client_sockfd, buff, 1024, 0);
-        // printf("send msg from client,ret = %d: buff = %s\n", ret, buff);
         switch (socket_info->cmd)
         {
         case INIT_REG:
@@ -474,18 +470,18 @@ int main(int argc, char *argv[])
             printf("SET_FUSION %d\n",socket_info->value);
             break;
         case GET_IMG:
-            get_img(imgbuff, &sensor_fops);
+        case BRUSH_IMG:
+            get_img(imgbuff+2, &sensor_fops);
 
+            unsigned char *buf = (unsigned char *)imgbuff;
             for (size_t i = 0; i < SENSOR_WIDTH*SENSOR_HEIGHT; i++)
             {
-                buf[i+4] = imgbuff[i]>>4;
+                buf[i+4] = imgbuff[i+2]>>4;
             }
 
-            int *p = (int *)buf;
-            *p = GET_IMG;
-            printf("p ======== %d\n",*p);
+            ((int *)buf)[0] = socket_info->cmd;
+            printf("p ======== %d\n",((int *)buf)[0]);
             
-
             ret = send(client_sockfd,buf,SENSOR_WIDTH*SENSOR_HEIGHT+4,0);
             printf("GET_IMG\n");
             break;

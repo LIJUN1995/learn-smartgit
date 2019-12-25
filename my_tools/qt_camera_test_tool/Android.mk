@@ -16,6 +16,6 @@ LOCAL_SRC_FILES:= \
 		fb_test.c \
 		camera_qt.c \
 
-LOCAL_MODULE:= test_demo
+LOCAL_MODULE:= qt_test_camera
 
 include $(BUILD_EXECUTABLE)
