@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
- #include <arpa/inet.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <errno.h>
 // #include "savebmp.h"
@@ -22,20 +22,27 @@
 sem_t g_down_sem;
 typedef struct __socket_info
 {
-    int cmd;
-    int value;
+    uint16_t cmd;
+    uint16_t value1;
+    uint16_t value2;
+    uint16_t value3;
+    uint16_t value4;
 }SOCKET_INFO;
 
 enum {
-    INIT_REG,
+    INIT_SENSOR = 1000,
+    SET_BINNING,
+    SET_FUSION,
+    SET_IMGWH,
     SET_GAIN,
     SET_EXP,
-    SET_FUSION,
     WRITE_REG_VALUE,
     READ_REG_VALUE, 
     GET_IMG,
     EXIT_CMD,
     BRUSH_IMG,
+    STATUS_FAILED,
+    STATUS_SUCCESS,
 };
 
 
@@ -205,12 +212,12 @@ int func_sem_timedwait()
     return ret;
 }
 
-unsigned long long cfp_get_uptime()
+unsigned short cfp_get_uptime()
 {
     struct timeval cur;
-    long long int timems = 0;
+    unsigned short timems = 0;
     gettimeofday(&cur, NULL);
-    timems = (long long int)(cur.tv_sec * 1000 + (cur.tv_usec) / 1000);
+    timems = (unsigned short)(cur.tv_sec * 1000 + (cur.tv_usec) / 1000);
     return timems;
 }
 
@@ -229,9 +236,9 @@ int WaitSemCall()
     return ret;
 }
 
-void get_img(unsigned short *p, cdfinger_fops *sensor_fops)
+int get_img(unsigned short *p, cdfinger_fops *sensor_fops, SOCKET_INFO *socket_info)
 {
-    long long t0 = 0;
+    unsigned short t0 = 0, t1 = 0, t2 = 0;
     int ret;
     int semcnts = 0;
     sem_getvalue(&g_down_sem, &semcnts);
@@ -246,14 +253,21 @@ void get_img(unsigned short *p, cdfinger_fops *sensor_fops)
     ret = WaitSemCall();
     if (ret == -1)
     {
-        exit(1);
+        return ret;
     }
-    long long t1 = cfp_get_uptime();
-    printf("sensor exp time spend %lldms\n", t1 - t0);
+    t1 = cfp_get_uptime();
+    printf("sensor exp time spend %lldms\n", t1-t0);
 
     sensor_fops->sensor_get_img_buffer(p, SENSOR_WIDTH, SENSOR_HEIGHT);
-    printf("spi transmission spend time  %lldms\n", cfp_get_uptime() - t1);
-    printf("all spend time  %lldms\n", cfp_get_uptime() - t0);
+    t2 = cfp_get_uptime();
+    printf("spi transmission spend time  %lldms\n", t2 - t1);
+    printf("all spend time  %lldms\n", t2 - t0);
+
+    socket_info->value1 = t1-t0;
+    socket_info->value2 = t2-t1;
+    socket_info->value3 = t2-t0;
+
+    return 0;
 }
 
 int DeviceInit(int devfd)
@@ -388,6 +402,42 @@ out:
     return ret;
 }
 
+int re_malloc(void **p, int len)
+{
+    if(*p != NULL)
+        free(p);
+    *p = malloc(len);
+    if(*p == NULL)
+    {
+        printf("malloc failed\n");
+        return -1;
+    }
+    return 0;
+}
+
+float getPsnr(uint16_t* singleImg, uint16_t* img, int width, int height)
+{
+	int i;
+	float N = 0;
+	for (i = 0; i < width * height; ++i)
+	{
+		N += (singleImg[i] - img[i]) * (singleImg[i] - img[i]);
+	}
+	N = N / (width * height);
+	return 10 * log10(4096 * 4096 / N);
+}
+
+float getSnr(uint16_t* singleImg, uint16_t* img, int width, int height)
+{
+	int i;
+	float S = 0, N = 0;
+	for (i = 0; i < width * height; ++i)
+	{
+		S += singleImg[i] * singleImg[i];
+		N += (singleImg[i] - img[i]) * (singleImg[i] - img[i]);
+	}
+	return 10 * log10(S / N);
+}
 
 
 int main(int argc, char *argv[])
@@ -424,12 +474,6 @@ int main(int argc, char *argv[])
         printf("accept success\n");
     }
 
-    if (checkSensorId(devfd, &sensor_fops) == false)
-    {
-        printf("===========read id fail===========\n");
-        return -1;
-    }
-
     socket_info = (SOCKET_INFO *)malloc(sizeof(SOCKET_INFO));
     if(socket_info == NULL){
         printf("malloc socket_info failed\n");
@@ -437,70 +481,145 @@ int main(int argc, char *argv[])
     }
     memset(socket_info,0X00,sizeof(SOCKET_INFO));
 
-    imgbuff = (unsigned short *)malloc(SENSOR_WIDTH*SENSOR_HEIGHT*2+4);
-    if(imgbuff == NULL){
-        printf("malloc imgbuff failed\n");
-        goto OUT;
-    }
-    memset(imgbuff,0X00,SENSOR_WIDTH*SENSOR_HEIGHT*2+4);
-
     while(1){     
         ret = recv(client_sockfd, socket_info, sizeof(SOCKET_INFO), 0);
-        printf("recv msg from client,ret = %d : cmd=%d, value=%d\n", ret, socket_info->cmd,socket_info->value);
+        printf("recv msg from client,ret = %d : cmd=%d, value=%d\n", ret, socket_info->cmd,socket_info->value1);
         if(ret == 0){
             printf("TCP Connection interruption\n");
             break;
         }
         switch (socket_info->cmd)
         {
-        case INIT_REG:
-            sensor_fops.sensor_init(devfd); 
-            printf("INIT_REG\n");
+        case INIT_SENSOR:
+            if (checkSensorId(devfd, &sensor_fops) == false)
+            {
+                printf("===========read id fail===========\n");
+                ret = -1;
+                break;
+            }else{
+                ret = re_malloc(&imgbuff,SENSOR_HEIGHT*SENSOR_WIDTH*2+sizeof(SOCKET_INFO));
+                if(ret == -1)
+                {
+                    goto OUT;
+                }
+            }
+            ret = sensor_fops.sensor_init(devfd); 
+            if(ret != -1){
+                socket_info->value1 = 0;
+                socket_info->value2 = 0;
+                socket_info->value3 = SENSOR_WIDTH;
+                socket_info->value4 = SENSOR_HEIGHT;
+            }
+            printf("INIT_SENSOR\n");
             break;
         case SET_GAIN:
-            sensor_fops.sensor_setImgGain(socket_info->value);
-            printf("SET_GAIN  %d\n", socket_info->value);
+            ret = sensor_fops.sensor_setImgGain(socket_info->value1);
+            if(ret == -1){
+                socket_info->value1 = STATUS_FAILED;
+            }
+            printf("SET_GAIN  %d\n", socket_info->value1);
             break;
         case SET_EXP:
-            sensor_fops.sensor_setExpoTime(socket_info->value);
-            printf("SET_EXP %d\n", socket_info->value);
+            ret = sensor_fops.sensor_setExpoTime(socket_info->value1);
+            if(ret == -1){
+                socket_info->value1 = STATUS_FAILED;
+            }
+            printf("SET_EXP %d\n", socket_info->value1);
             break;
         case SET_FUSION:
-            sensor_fops.sensor_setFrameNum(socket_info->value);
-            printf("SET_FUSION %d\n",socket_info->value);
+            ret = sensor_fops.sensor_setFrameNum(socket_info->value1);
+            if(ret == -1){
+                socket_info->value1 = STATUS_FAILED;
+            }
+            printf("SET_FUSION %d\n",socket_info->value1);
             break;
+        case SET_BINNING:
+            ret = sensor_fops.sensor_setBinning(socket_info->value1);
+            if(ret != -1){
+                int temp_ret = 0;
+
+                if(socket_info->value1 == 2){
+                    SENSOR_WIDTH = 240;
+                    SENSOR_HEIGHT = 160;
+                }else if(socket_info->value1 == 3){
+                    SENSOR_WIDTH = 160;
+                    SENSOR_HEIGHT = 106;
+                }else if(socket_info->value1 == 4){
+                    SENSOR_WIDTH = 120;
+                    SENSOR_HEIGHT = 80;
+                }
+                
+                temp_ret = re_malloc(&imgbuff,SENSOR_HEIGHT*SENSOR_WIDTH*2+sizeof(SOCKET_INFO));
+                if(temp_ret == -1)
+                {
+                    goto OUT;
+                }else{
+                    socket_info->value3 = SENSOR_WIDTH;
+                    socket_info->value4 = SENSOR_HEIGHT;
+                }
+
+            }
+            printf("SET_BINNING %d\n", socket_info->value1);
+            break;
+        case SET_IMGWH:
+            ret = sensor_fops.sensor_setImgWH(socket_info->value1,socket_info->value2,socket_info->value3,socket_info->value4);
+            if(ret != -1){
+                SENSOR_WIDTH = socket_info->value3;
+                SENSOR_HEIGHT = socket_info->value4;
+            }
         case GET_IMG:
         case BRUSH_IMG:
-            get_img(imgbuff+2, &sensor_fops);
-
-            unsigned char *buf = (unsigned char *)imgbuff;
-            for (size_t i = 0; i < SENSOR_WIDTH*SENSOR_HEIGHT; i++)
-            {
-                buf[i+4] = imgbuff[i+2]>>4;
+            ret = get_img(imgbuff+5, &sensor_fops, socket_info);
+            if(ret == -1){
+                break;
             }
 
-            ((int *)buf)[0] = socket_info->cmd;
-            printf("p ======== %d\n",((int *)buf)[0]);
+            memcpy(imgbuff,socket_info,sizeof(SOCKET_INFO));
+            unsigned char *p = (unsigned char *)(imgbuff+sizeof(SOCKET_INFO)/2);
+            for (size_t i = 0; i < SENSOR_HEIGHT*SENSOR_WIDTH; i++)
+            {
+                p[i] = imgbuff[i+sizeof(SOCKET_INFO)/2]>>4;
+            }
             
-            ret = send(client_sockfd,buf,SENSOR_WIDTH*SENSOR_HEIGHT+4,0);
+            printf("%d %d %d\n",socket_info->value1,socket_info->value2,socket_info->value3);
+            
+            ret = send(client_sockfd,imgbuff,SENSOR_WIDTH*SENSOR_HEIGHT+sizeof(SOCKET_INFO),0);
             printf("GET_IMG\n");
             break;
         case WRITE_REG_VALUE:
-            write_register((unsigned short)((socket_info->value)>>16),(unsigned char)(socket_info->value));
-
-            unsigned short reg = (unsigned short)((socket_info->value)>>16);
-            unsigned char value = (unsigned char)(socket_info->value);
-            printf("WRITE_REG_VALUE 0x%04x    0x%02x\n",reg, value);
+            ret = write_register(socket_info->value1,socket_info->value2);
+            if(ret == -1){
+                socket_info->value1 = STATUS_FAILED;
+            }
             break;
         case READ_REG_VALUE:
-            ret = read_register((unsigned short)(socket_info->value));
-            printf("READ_REG_VALUE 0x%04x,  0x%02x\n",socket_info->value, ret);
-            socket_info->cmd = READ_REG_VALUE;
-            socket_info->value = ret;
-            ret = send(client_sockfd,socket_info,sizeof(SOCKET_INFO),0);
+            ret = read_register((unsigned short)(socket_info->value1));
+            if(ret == -1){
+                socket_info->value1 = STATUS_FAILED;
+            }else{
+                socket_info->cmd = READ_REG_VALUE;
+                socket_info->value1 = ret;
+                ret = send(client_sockfd,socket_info,sizeof(SOCKET_INFO),0); 
+            }
             break;      
         default:
+            printf("the TCP CMD error\n");
             break;
+        }
+        printf("0x98=%d, 0x99=%d, 0x9a=%d\n",read_register(0x98),read_register(0x99),read_register(0x9a));
+        printf("0x9b=%d, 0x9c=%d, 0x9d=%d\n",read_register(0x9b),read_register(0x9c),read_register(0x9d));
+        printf("0x9e=%d, 0x9f=%d, 0xa0=%d\n",read_register(0x9e),read_register(0x9f),read_register(0xa0));
+        if(ret == -1){
+            socket_info->value1 = STATUS_FAILED;
+            ret = send(client_sockfd,socket_info,sizeof(SOCKET_INFO),0);
+            if(ret == -1){
+                printf("socket send error: %s(errno: %d)\n",strerror(errno),errno); 
+            }
+        }else if((socket_info->cmd != GET_IMG) && (socket_info->cmd != BRUSH_IMG)){
+            ret = send(client_sockfd,socket_info,sizeof(SOCKET_INFO),0);
+            if(ret == -1){
+                printf("socket send error: %s(errno: %d)\n",strerror(errno),errno); 
+            }
         }
     }
 
