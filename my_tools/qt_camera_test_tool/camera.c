@@ -478,7 +478,7 @@ int main(int argc, char *argv[])
     }
 
     sensor_fops.sensor_init(fd);
-
+/*
     switch (argc)
     {
     case 1:
@@ -545,6 +545,14 @@ int main(int argc, char *argv[])
     }
 
     count = atoi(argv[2]);
+    */
+
+    sensor_fops.sensor_setExpoTime(atoi(argv[1]));
+    sensor_fops.sensor_setBinning(2);
+    sensor_fops.sensor_setImgGain(1);
+    sensor_fops.sensor_setFrameNum(1);
+    SENSOR_WIDTH = 240;
+    SENSOR_HEIGHT = 160;
 
     printf("SENSOR_WIDTH=%d,SENSOR_HEIGHT=%d", SENSOR_WIDTH, SENSOR_HEIGHT);
     imgbuf1 = (unsigned short *)malloc(SENSOR_WIDTH * SENSOR_HEIGHT * 2 * img_num);
@@ -552,16 +560,18 @@ int main(int argc, char *argv[])
     bmp_buf2 = (unsigned char *)malloc(SENSOR_WIDTH * SENSOR_HEIGHT);
 
     char buf[16];
-    FILE *fp = fopen("/data/temp_rem.txt", "wb+");
-    if (fp == NULL)
+    FILE *fp1 = fopen("/data/temp_rem3.txt", "wb+");
+    if (fp1 == NULL)
     {
         printf("fopen  error");
         return -1;
     }
     unsigned char x = 0;
+
+    // int g = atoi(argv[4]);
     while(1)
     {
-        int temp_fd = open("/sys/class/power_supply/battery/temp", O_RDONLY);
+/*        int temp_fd = open("/sys/class/power_supply/battery/temp", O_RDONLY);
         if (temp_fd < 0)
         {
             printf("open /sys/class/power_supply/battery/temp fail");
@@ -582,7 +592,7 @@ int main(int argc, char *argv[])
         
         int m = 0;
         int n = 1;
-        uint32_t temp = 103*16;
+        uint32_t temp = 100*16;
         unsigned char gain = atoi(argv[4]);
         while ((avg - temp > 0? avg-temp : temp-avg)>5*16)
         {
@@ -629,15 +639,29 @@ int main(int argc, char *argv[])
             }
             printf("0x2b1 = 0x%02x, 0x2b2 = 0x%02x, avg = %d, sum = %d temp = %d\n",read_register(0x20e), read_register(0x20f)&0xfc,  avg, sum,atoi(buf));
         }
-        
-        char data_buf[1024] = {0};
 
-        sprintf(data_buf,"0x2b1 = 0x%02x, 0x2b2 = 0x%02x, x = 0x%02x , avg = %d, sum = %d temp = %d\n",read_register(0x20e), read_register(0x20f)&0xfc, x, avg, sum,atoi(buf));
-        
-        fwrite(data_buf,1024, 1, fp);
+        uint32_t sum = 0;
+        int avg = 0;
+        for (size_t i = 3; i < 10; i++)
+        {
+            sensor_fops.sensor_setImgGain(i);
+            get_img(imgbuf1, &sensor_fops);
+            sum = 0;
+            for (size_t j = 0; j < SENSOR_WIDTH * SENSOR_HEIGHT; j++)
+            {
+                sum += imgbuf1[j];
+            }
+
+            avg = sum/(SENSOR_WIDTH * SENSOR_HEIGHT);
+
+            char data_buf[128] = {0};
+            sprintf(data_buf,"gain = %d, avg = %d,temp = %d, \n", i, avg, atoi(buf));
+            fwrite(data_buf,128, 1, fp1);
+        }*/
+
         sleep(1);
     }
-    fclose(fp);
+    fclose(fp1);
 
 /*
     while (count--)
@@ -691,6 +715,7 @@ int main(int argc, char *argv[])
         //        checksum(bmp_buf);
     }
 */
+
 out:
     free(imgbuf1);
     free(bmp_buf1);
