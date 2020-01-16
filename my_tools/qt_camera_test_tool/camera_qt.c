@@ -17,6 +17,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <errno.h>
+#include <math.h>
 // #include "savebmp.h"
 
 sem_t g_down_sem;
@@ -256,12 +257,12 @@ int get_img(unsigned short *p, cdfinger_fops *sensor_fops, SOCKET_INFO *socket_i
         return ret;
     }
     t1 = cfp_get_uptime();
-    printf("sensor exp time spend %lldms\n", t1-t0);
+    printf("sensor exp time spend %dms\n", t1-t0);
 
     sensor_fops->sensor_get_img_buffer(p, SENSOR_WIDTH, SENSOR_HEIGHT);
     t2 = cfp_get_uptime();
-    printf("spi transmission spend time  %lldms\n", t2 - t1);
-    printf("all spend time  %lldms\n", t2 - t0);
+    printf("spi transmission spend time  %dms\n", t2 - t1);
+    printf("all spend time  %dms\n", t2 - t0);
 
     socket_info->value1 = t1-t0;
     socket_info->value2 = t2-t1;
@@ -303,17 +304,17 @@ void reset_device(int devfd)
 
 bool checkSensorId(int devfd, cdfinger_fops *sensor_fops)
 {
-    // fps6038_gc07s0_init(&sensor_fops);
-    // if (sensor_fops.sensor_verify_id(fd) == true)
-    // {
-    //     printf("current sensor is fps6038_gc07s0_init");
-    //     ioctl(fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000 * 2);
-    //     SENSOR_WIDTH = 176;
-    //     SENSOR_HEIGHT = 216;
-    //     return true;
-    // }
+    fps6038_gc07s0_init(sensor_fops);
+    if (sensor_fops->sensor_verify_id(devfd) == true)
+    {
+        printf("current sensor is fps6038_gc07s0_init\n");
+        ioctl(devfd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000);
+        SENSOR_WIDTH = 176;
+        SENSOR_HEIGHT = 216;
+        return true;
+    }
 
-    // reset_device();
+    reset_device(devfd);
 
     fps7011_gcm7s0_init(sensor_fops);
     if (sensor_fops->sensor_verify_id(devfd) == true)
@@ -324,7 +325,7 @@ bool checkSensorId(int devfd, cdfinger_fops *sensor_fops)
         return true;
     }
 
-    // reset_device();
+    // reset_device()
 
     // sensor_fps6037_isf1001_init(&sensor_fops);
     // if (sensor_fops.sensor_verify_id(fd) == true)
@@ -497,7 +498,7 @@ int main(int argc, char *argv[])
                 ret = -1;
                 break;
             }else{
-                ret = re_malloc(&imgbuff,SENSOR_HEIGHT*SENSOR_WIDTH*2+sizeof(SOCKET_INFO));
+                ret = re_malloc((void **)&imgbuff,SENSOR_HEIGHT*SENSOR_WIDTH*2+sizeof(SOCKET_INFO));
                 if(ret == -1)
                 {
                     goto OUT;
@@ -537,19 +538,8 @@ int main(int argc, char *argv[])
             ret = sensor_fops.sensor_setBinning(socket_info->value1);
             if(ret != -1){
                 int temp_ret = 0;
-
-                if(socket_info->value1 == 2){
-                    SENSOR_WIDTH = 240;
-                    SENSOR_HEIGHT = 160;
-                }else if(socket_info->value1 == 3){
-                    SENSOR_WIDTH = 160;
-                    SENSOR_HEIGHT = 106;
-                }else if(socket_info->value1 == 4){
-                    SENSOR_WIDTH = 120;
-                    SENSOR_HEIGHT = 80;
-                }
                 
-                temp_ret = re_malloc(&imgbuff,SENSOR_HEIGHT*SENSOR_WIDTH*2+sizeof(SOCKET_INFO));
+                temp_ret = re_malloc((void **)&imgbuff,SENSOR_HEIGHT*SENSOR_WIDTH*2+sizeof(SOCKET_INFO));
                 if(temp_ret == -1)
                 {
                     goto OUT;
@@ -606,9 +596,10 @@ int main(int argc, char *argv[])
             printf("the TCP CMD error\n");
             break;
         }
-        printf("0x98=%d, 0x99=%d, 0x9a=%d\n",read_register(0x98),read_register(0x99),read_register(0x9a));
-        printf("0x9b=%d, 0x9c=%d, 0x9d=%d\n",read_register(0x9b),read_register(0x9c),read_register(0x9d));
-        printf("0x9e=%d, 0x9f=%d, 0xa0=%d\n",read_register(0x9e),read_register(0x9f),read_register(0xa0));
+        // printf("0x98=%d, 0x99=%d, 0x9a=%d\n",read_register(0x98),read_register(0x99),read_register(0x9a));
+        // printf("0x9b=%d, 0x9c=%d, 0x9d=%d\n",read_register(0x9b),read_register(0x9c),read_register(0x9d));
+        // printf("0x9e=%d, 0x9f=%d, 0xa0=%d\n",read_register(0x9e),read_register(0x9f),read_register(0xa0));
+        printf("value1=%d, value2=%d, value3=%d, value4=%d\n",socket_info->value1,socket_info->value2,socket_info->value3,socket_info->value4);
         if(ret == -1){
             socket_info->value1 = STATUS_FAILED;
             ret = send(client_sockfd,socket_info,sizeof(SOCKET_INFO),0);

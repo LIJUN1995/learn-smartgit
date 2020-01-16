@@ -1,7 +1,6 @@
 *.o
+.*
 *.rar
 *.zip
-/out/
-/Documentation/
 *.o.d
-qt_test_camera
+/my_tools/qt_camera_test_tool/out/

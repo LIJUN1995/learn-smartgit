@@ -29,8 +29,8 @@ static unsigned short SENSOR_INIT_CONF[][2] = {
     {0x0163, 0x00}, {0x0164, 0x08}, {0x0287, 0x18}, {0x0297, 0xa3}, {0x017c, 0x28}, {0x0242, 0x9e}, {0x0243, 0x27},
     {0x010a, 0x00}, {0x010b, 0x08}, {0x010c, 0x00}, {0x010d, 0x04}, {0x010e, 0x05}, {0x010f, 0xa0}, {0x0119, 0x11},
     {0x0112, 0xe0}, {0x0113, 0x40}, {0x0117, 0x01}, {0x0118, 0x3f}, {0x0060, 0x00}, {0x0059, 0x00}, {0x0202, 0x01},
-    {0x0203, 0x20}, {0x0202, 0x00}, {0x0203, 0x60}, {0x02b3, 0x00}, {0x0089, 0x03}, {0x2b0, 0x38},  {0x90, 0x01},
-    {0x91, 0x9e},   {0x92, 0x68},
+    {0x0203, 0x20}, {0x0202, 0x00}, {0x0203, 0x60}, {0x02b3, 0x00}, {0x0089, 0x03}, {0x02b0, 0x38}, {0x0090, 0x01},
+    {0x0091, 0x9e}, {0x0092, 0x68},
 };
 
 static int spi_send_data(unsigned char *tx, unsigned char *rx, int len) {
@@ -48,7 +48,6 @@ static int spi_send_data(unsigned char *tx, unsigned char *rx, int len) {
 
     return ret;
 }
-
 int write_register(unsigned short reg, unsigned char value) {
     unsigned char tx[4] = {0};
     unsigned char rx[4] = {0};
@@ -507,14 +506,20 @@ static int sensor_setBinning(int binning_mode) {
     case 2:
         value = 0x25;
         sensor_setImgWH(0, 0, 480, 320);
+        SENSOR_WIDTH = 240;
+        SENSOR_HEIGHT = 160;
         break;
     case 3:
         value = 0x3a;
         sensor_setImgWH(0, 0, 480, 318);
+        SENSOR_WIDTH = 160;
+        SENSOR_HEIGHT = 106;
         break;
     case 4:
         value = 0x4f;
         sensor_setImgWH(0, 0, 480, 320);
+        SENSOR_WIDTH = 120;
+        SENSOR_HEIGHT = 80;
         break;
     default:
         printf("set binning mode failed,the parameter error");

@@ -14,10 +14,11 @@ LOCAL_SRC_FILES:= \
         ./camera_ctl_file/fps7011_gcm7s0.c \
         cfp_mem.c \
 		fb_test.c \
-        camera_qt.c \
-		# camera_qt.c \
+        $(FILE_NAME)
+        # camera_qt.c \
+		# # camera_qt.c \
 
-LOCAL_MODULE:= qt_test_camera
+LOCAL_MODULE:= $(DEMO_NAME)
 # LOCAL_MODULE:= test_camera
 
 include $(BUILD_EXECUTABLE)
