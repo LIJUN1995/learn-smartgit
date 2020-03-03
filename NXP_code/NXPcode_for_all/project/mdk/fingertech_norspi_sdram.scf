@@ -1,0 +1,105 @@
+#! armcc -E
+/*
+** ###################################################################
+**     Processors:          fingertechIfingertechXRT1052DVL6B
+**     fingertechail:                liwandong@aliyun.cofingertech
+**     author:              wendell.li
+** ###################################################################
+*/
+#define  fingertech_flashstartadd		0x60000000		;fingertech_flashstartadd 的起始地址,存放在W25Q64中
+#define  fingertech_flashstartsize		0x00001000      ;域大小
+
+#define  fingertech_ivt_start                    0x60001000			//fingertech_ivt域起始地址,定义在SPI FLASH里面(8fingertechB)
+#define  fingertech_ivt_size                     0x00001000			//fingertech_ivt域大小
+
+#define  fingertech_interrupts_start             0x60002000			//fingertech_interrupts域起始地址,定义在SPI FLASH里面(8fingertechB)
+#define  fingertech_interrupts_size              0x00000400			//fingertech_interrupts域大小
+
+#define  fingertech_text_start                   0x60002400			//fingertech_text域起始地址,定义在SPI FLASH里面(8fingertechB)
+#define  fingertech_text_size                    0x1F7FDC00			//fingertech_text域大小
+ 
+#define  fingertech_data_start                   0x20200000			//fingertech_data域起始地址,定义在OCRAfingertech里面(256KB)
+#define  fingertech_data_size                    0x00020000			//fingertech_data域大小 128K
+
+#define  fingertech_ncache_start                 0x80500000			//fingertech_ncache域起始地址,定义在SDRAfingertech里面(5fingertech开始,总共27fingertechB),必须初始化SDRAfingertech,才能使用此域
+#define  fingertech_ncache_size                  0x01B00000			//fingertech_ncache域大小
+
+#define  fingertech_ram_start					 0x80000000        //放到外扩RAM的起始地址
+#define	 fingertech_ram_size					 0x01E00000			
+
+
+#define __stack_size__                 0x00020000
+#define __heap_size__                  0x000f0000
+
+#define before_heap_pad                0x00010000
+
+/* Sizes */
+#if (defined(__stack_size__))
+  #define Stack_Size                   __stack_size__
+#else
+  #define Stack_Size                   0x8000				//设置堆栈大小,一般设置大一点.
+#endif	
+
+#if (defined(__heap_size__))
+  #define Heap_Size                    __heap_size__
+#else
+  #define Heap_Size                    0x8000				//没用到系统自带的内存管理,则可以设置这里为0.
+#endif
+
+;第一个加载域存放512byte的 Flash Configuration Parameters 数据
+;保证起放在6000000处
+fingertech_loadflashconfigparameters fingertech_flashstartadd fingertech_flashstartsize
+{
+	RW_m_config_text fingertech_flashstartadd fingertech_flashstartsize
+	{
+		*(.boot_hdr.conf,+FIRST)  ;将.boot_hdr.conf加载到此段
+	}
+}
+
+
+;存放IVT，Boot Data，DCD 数据
+;保证放在.boot_hdr.conf后面,即0x60001000处
+fingertech_loadivtbootdcd fingertech_ivt_start fingertech_ivt_size
+{
+	RW_m_ivt_text fingertech_ivt_start fingertech_ivt_size
+	{
+		*(.boot_hdr.ivt,+FIRST)
+		*(.boot_hdr.boot_data)
+		*(.boot_hdr.dcd_data)
+	}
+}
+
+
+
+;RO RW ZI CODE 加载域
+fingertech_loaddata	fingertech_text_start fingertech_text_size
+{
+	Efingertechdate fingertech_text_start fingertech_text_size
+	{
+		* (InRoot$$Sections)
+		.ANY(+RO)
+	}
+	;使用SDRAM
+	Efingertechram fingertech_ram_start fingertech_ram_size - Stack_Size - Heap_Size
+	{
+		.ANY(+RW +ZI)
+		* (fingertech_flashop)
+		
+	}
+	ARM_LIB_HEAP +before_heap_pad EMPTY Heap_Size
+	{
+	}
+	ARM_LIB_STACK fingertech_ram_start+fingertech_ram_size EMPTY -Stack_Size
+	{
+	}
+}
+
+
+;中断加载域
+fingertech_loadinterrupt fingertech_interrupts_start fingertech_interrupts_size
+{
+	;运行域
+	VECTOR_ROM  fingertech_interrupts_start fingertech_interrupts_size{
+		*(RESET,+FIRST)
+	}
+}

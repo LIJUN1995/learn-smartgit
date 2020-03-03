@@ -72,7 +72,7 @@ int fp_SaveGrayBitmap(const char *FilePath, unsigned char *pData, int row, int c
     int i = 0;
     if (NULL == pData)
         return -1;
-    fd = open(FilePath, O_CREAT | O_RDWR);
+    fd = open(FilePath, O_CREAT | O_RDWR, 0777);
     if (0 == fd)
         return -1;
     colume_t = (uint32_t)colume; //(uint32_t)(colume + 3) & 0xFFFFFFFC;
@@ -366,27 +366,27 @@ void reset_device()
 
 bool checkSensorId()
 {
-    // fps6038_gc07s0_init(&sensor_fops);
-    // if (sensor_fops.sensor_verify_id(fd) == true)
-    // {
-    //     printf("current sensor is fps6038_gc07s0_init");
-    //     ioctl(fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000 * 2);
-    //     SENSOR_WIDTH = 176;
-    //     SENSOR_HEIGHT = 216;
-    //     return true;
-    // }
+    fps6038_gc07s0_init(&sensor_fops);
+    if (sensor_fops.sensor_verify_id(fd) == true)
+    {
+        printf("current sensor is fps6038_gc07s0_init");
+        ioctl(fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000 * 2);
+        SENSOR_WIDTH = 176;
+        SENSOR_HEIGHT = 216;
+        return true;
+    }
 
     // reset_device();
 
-    fps7011_gcm7s0_init(&sensor_fops);
-    if (sensor_fops.sensor_verify_id(fd) == true)
-    {
-        img_num = 1;
-        ioctl(fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000);
-        SENSOR_WIDTH = 160;
-        SENSOR_HEIGHT = 106;
-        return true;
-    }
+    // fps7011_gcm7s0_init(&sensor_fops);
+    // if (sensor_fops.sensor_verify_id(fd) == true)
+    // {
+    //     img_num = 1;
+    //     ioctl(fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000);
+    //     SENSOR_WIDTH = 160;
+    //     SENSOR_HEIGHT = 106;
+    //     return true;
+    // }
 
     // reset_device();
 
@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
     unsigned char *bmp_buf1 = NULL;
     unsigned char *bmp_buf2 = NULL;
 
-    fd = open("/dev/fpsdev0", O_RDWR);
+    fd = open("/dev/fpsdev0", O_RDWR, 0777);
     if (fd < 0)
     {
         printf("open fpsdev0 fail");
@@ -546,32 +546,32 @@ int main(int argc, char *argv[])
 
     count = atoi(argv[2]);
     */
-
+    count = atoi(argv[2]);
     sensor_fops.sensor_setExpoTime(atoi(argv[1]));
     sensor_fops.sensor_setBinning(2);
     sensor_fops.sensor_setImgGain(1);
     sensor_fops.sensor_setFrameNum(1);
-    SENSOR_WIDTH = 240;
-    SENSOR_HEIGHT = 160;
+    SENSOR_WIDTH = 176;
+    SENSOR_HEIGHT = 216;
 
     printf("SENSOR_WIDTH=%d,SENSOR_HEIGHT=%d", SENSOR_WIDTH, SENSOR_HEIGHT);
     imgbuf1 = (unsigned short *)malloc(SENSOR_WIDTH * SENSOR_HEIGHT * 2 * img_num);
     bmp_buf1 = (unsigned char *)malloc(SENSOR_WIDTH * SENSOR_HEIGHT);
     bmp_buf2 = (unsigned char *)malloc(SENSOR_WIDTH * SENSOR_HEIGHT);
 
-    char buf[16];
-    FILE *fp1 = fopen("/data/temp_rem3.txt", "wb+");
-    if (fp1 == NULL)
-    {
-        printf("fopen  error");
-        return -1;
-    }
-    unsigned char x = 0;
+    // char buf[16];
+    // FILE *fp1 = fopen("/data/temp_rem3.txt", "wb+");
+    // if (fp1 == NULL)
+    // {
+    //     printf("fopen  error");
+    //     return -1;
+    // }
+    // unsigned char x = 0;
 
     // int g = atoi(argv[4]);
-    while(1)
+ /*   while(1)
     {
-/*        int temp_fd = open("/sys/class/power_supply/battery/temp", O_RDONLY);
+       int temp_fd = open("/sys/class/power_supply/battery/temp", O_RDONLY);
         if (temp_fd < 0)
         {
             printf("open /sys/class/power_supply/battery/temp fail");
@@ -659,11 +659,10 @@ int main(int argc, char *argv[])
             fwrite(data_buf,128, 1, fp1);
         }*/
 
-        sleep(1);
-    }
-    fclose(fp1);
+    //     sleep(1);
+    // }
+    // fclose(fp1);
 
-/*
     while (count--)
     {
         int sum = 0;
@@ -714,7 +713,7 @@ int main(int argc, char *argv[])
         i++;
         //        checksum(bmp_buf);
     }
-*/
+
 
 out:
     free(imgbuf1);

@@ -96,7 +96,7 @@ int fp_SaveGrayBitmap(const char *FilePath, unsigned char *pData, int row, int c
     int i = 0;
     if (NULL == pData)
         return -1;
-    fd = open(FilePath, O_CREAT | O_RDWR);
+    fd = open(FilePath, O_CREAT | O_RDWR, 0777);
     if (0 == fd)
         return -1;
     colume_t = (uint32_t)colume; //(uint32_t)(colume + 3) & 0xFFFFFFFC;

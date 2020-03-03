@@ -4,3 +4,7 @@
 *.zip
 *.o.d
 /my_tools/qt_camera_test_tool/out/
+/GD32_code/gd_bootloader/outing/
+/GD32_code/gd_code_usb_msc/outing/
+/GD32_code/gd_bootloader/listing/Project.map
+/GD32_code/gd_bootloader/project/Project.uvguix.Caiden
