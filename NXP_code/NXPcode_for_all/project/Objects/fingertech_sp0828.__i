@@ -1,6 +1,0 @@
---c99 -c --cpu Cortex-M7.fp.dp -D__MICROLIB -g -W -O0 --apcs=interwork --split_sections -I ..\nxplib\cmsis -I ..\nxplib\driver -I ..\nxplib\utilities -I ..\nxplib\xip -I ..\user\inc -I ..\nxplib\utilities\io -I ..\nxplib\utilities\log -I ..\nxplib\utilities\str -I ..\USB\include -I ..\USB\device -I ..\USB\osa -I ..\USB\phy -I ..\USB --library_interface=armcc --library_type=standardlib --diag_suppress=66,1296,186
--I.\RTE\_fingertech_underglassfingerprint
--Id:\Keil_v5\ARM\PACK\NXP\MIMXRT1052_DFP\10.0.4
--Id:\Keil_v5\ARM\CMSIS\Include
--D__UVISION_VERSION="524" -DCPU_MIMXRT1052DVL6B -DXIP_EXTERNAL_FLASH="1" -DXIP_BOOT_HEADER_ENABLE="1" -DXIP_BOOT_HEADER_DCD_ENABLE="1" -DCPU_MIMXRT1052DVL6B -DUSB_STACK_BM
--o .\objects\fingertech_sp0828.o --omf_browse .\objects\fingertech_sp0828.crf --depend .\objects\fingertech_sp0828.d "..\user\src\FingerTech_sp0828.c"
