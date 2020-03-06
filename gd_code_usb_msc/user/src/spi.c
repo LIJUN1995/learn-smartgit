@@ -54,7 +54,7 @@ void spi_config(void)
     spi_init_struct.frame_size           = SPI_FRAMESIZE_8BIT;
     spi_init_struct.clock_polarity_phase = SPI_CK_PL_LOW_PH_1EDGE;
     spi_init_struct.nss                  = SPI_NSS_SOFT;
-    spi_init_struct.prescale             = SPI_PSC_256;
+    spi_init_struct.prescale             = SPI_PSC_16;
     spi_init_struct.endian               = SPI_ENDIAN_MSB;
     spi_init(SPI1, &spi_init_struct);
 	
@@ -131,31 +131,4 @@ void spi_send_data(uint8_t *tx, uint8_t *rx, uint32_t len)
 	/*等待DMA数据接收完成*/
 	while(!rec_int_flag);
 	rec_int_flag = FALSE;
-}
-
-uint8_t spi_read_register(uint16_t reg)
-{
-	SpiTxBuffer[0] = 0xf2;
-	SpiTxBuffer[1] = reg>>8;
-	SpiTxBuffer[2] = reg;
-	SpiTxBuffer[3] = 0x00;
-	SpiTxBuffer[4] = 0x00;
-	spi_send_data(SpiTxBuffer, SpiRxBuffer, 5);
-	
-	return SpiRxBuffer[4];
-}
-
-void spi_write_register(uint16_t reg, uint8_t value)
-{
-	SpiTxBuffer[0] = 0xf0;
-	SpiTxBuffer[1] = reg>>8;
-	SpiTxBuffer[2] = reg;
-	SpiTxBuffer[3] = value;
-	spi_send_data(SpiTxBuffer, SpiRxBuffer, 4);
-}
-
-void spi_conf_init(void)
-{
-	spi_gpio_config();
-	spi_config();
 }
