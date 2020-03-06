@@ -138,14 +138,6 @@ void wait_spi_irq(void)
 void FingerTech_BspInit(void){
     systick_config();
     camera_reset_pin_init();
-//		cdfinger_irqpin_init();
 	spi_gpio_config();
 	usb_init();
-	
-//		camera_init();
-	
-//		int i = 0;
-//		uint8_t a = 0;
-//	for(i = 0;i < 216*176;i++)
-//		raw_img_rx[i] = a++;
 }
