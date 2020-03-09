@@ -12,7 +12,7 @@
 #include <fsl_cache.h>
 #include <fsl_lpspi.h>
 #include <fsl_lpi2c.h>
-#include <fsl_SP0828.h>
+#include <fsl_sp0828.h>
 #include <fsl_camera.h>
 #include <fsl_dmamux.h>
 #include <fsl_elcdif.h>
