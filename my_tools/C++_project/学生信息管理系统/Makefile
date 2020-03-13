@@ -2,20 +2,23 @@ CC = g++
 LD = $(CC)
 
 # TARGET = $(notdir $(CURDIR))
-TARGET = main
+TARGET = ./obj/main
 
-SRC_DIR = .
-INCLUDE_DIR += .
+SRC_DIR = ./Src
+INCLUDE_DIR += ./Include
+OUT_DIR =
 
 C_FLAGS = -g -Wall
-LD_FLAFS = 
+LD_FLAFS =  
 LD_LIBS =
 INCLUDES = -I$(INCLUDE_DIR)
 
 # ifeq ($(CC), g++)
 	TYPE = cpp
 	SRCS += $(wildcard $(SRC_DIR)/*.$(TYPE))
+	DIR += $(notdir $(SRCS))
 	OBJS += $(patsubst %.$(TYPE), %.o, $(SRCS))
+	
 # else
 # 	TYPE = c
 # 	SRCS += $(wildcard $(SRC_DIR)/*.$(TYPE))
@@ -26,15 +29,10 @@ all : $(TARGET)
 	@echo "Builded target:" $^
 	@echo "Done"
 		
-$(TARGET) : $(OBJS)
+$(TARGET) : $(SRCS)
 	@echo "Linking" $@ "from" $^ "..."
-	$(LD) -o $@ $^ $(LD_FLAGS) $(LD_LIBS) 
-	@echo "Link finished\n"
-					
-$(OBJS) : %.o:%.$(TYPE) 
-	@echo "Compiling" $@ "from" $< "..."
-	$(CC) -c -o $@ $< $(C_FLAGS) $(INCLUDES)
-	@echo "Compile finished\n"
+	$(LD) -o $@ $^ $(LD_FLAGS) $(LD_LIBS) $(INCLUDES)
+	@echo "Compile finished\n\n"
 								
 .PHONY : clean cleanobj
 clean : cleanobj
