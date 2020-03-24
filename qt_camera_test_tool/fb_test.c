@@ -384,12 +384,20 @@ void clear_screen(int w, int h, void* _loc)
   int fb_main(void) {
   int w;
   int h;
-  int b_fd;
+  int b_fd = -1;
   int id = 0;
   int bpp = 0;
  
   gr_init(bpp, id);
-  b_fd=open("/sys/class/leds/lcd-backlight/brightness",O_RDWR);
+//   b_fd=open("/sys/class/leds/lcd-backlight/brightness",O_RDWR);
+  b_fd=open("/dev/graphics/fb0",O_RDWR);
+  if (b_fd == -1)
+  {
+     printf("open backlight failed\n");
+     return -1;
+  }
+  
+
   write(b_fd,"255",4);
   w = vi.xres;
   h = vi.yres;

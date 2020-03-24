@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <math.h>
 // #include "savebmp.h"
+#include <sched.h>
 
 int fd = 0;
 sem_t g_down_sem;
@@ -346,7 +347,6 @@ void checksum(unsigned char *p)
 
 void DeviceInit(void)
 {
-    // fb_main();
     sem_init(&g_down_sem, 0, 0);
     cfp_handler_register(sig_handler);
     ioctl(fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000);
@@ -366,7 +366,7 @@ void reset_device()
 
 bool checkSensorId()
 {
-    fps6038_gc07s0_init(&sensor_fops);
+ /*   fps6038_gc07s0_init(&sensor_fops);
     if (sensor_fops.sensor_verify_id(fd) == true)
     {
         printf("current sensor is fps6038_gc07s0_init");
@@ -374,19 +374,19 @@ bool checkSensorId()
         SENSOR_WIDTH = 176;
         SENSOR_HEIGHT = 216;
         return true;
-    }
+    }*/
 
     // reset_device();
 
-    // fps7011_gcm7s0_init(&sensor_fops);
-    // if (sensor_fops.sensor_verify_id(fd) == true)
-    // {
-    //     img_num = 1;
-    //     ioctl(fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000);
-    //     SENSOR_WIDTH = 160;
-    //     SENSOR_HEIGHT = 106;
-    //     return true;
-    // }
+     fps7011_gcm7s0_init(&sensor_fops);
+     if (sensor_fops.sensor_verify_id(fd) == true)
+     {
+         img_num = 1;
+         ioctl(fd, CDFINGER_CHANGER_CLK_FREQUENCY, 9600000);
+         SENSOR_WIDTH = 160;
+         SENSOR_HEIGHT = 106;
+         return true;
+     }
 
     // reset_device();
 
@@ -456,212 +456,51 @@ int sensor_Gain_2(unsigned char gain) {
     return 0;
 }
 
+int Euclidean_distance(float x, float y)
+{
+    int g = 0;
+
+    g = y/x+x*y-y+x/3+y-x;
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
-    int count = 0, i = 0;
+    int count = 0, ret = 0, i = 0;
     unsigned short *imgbuf1 = NULL;
     unsigned char *bmp_buf1 = NULL;
     unsigned char *bmp_buf2 = NULL;
 
-    fd = open("/dev/fpsdev0", O_RDWR, 0777);
+    fd = open("/dev/fpsdev0", O_RDWR);
     if (fd < 0)
     {
         printf("open fpsdev0 fail");
         return -1;
     }
 
-    DeviceInit();
-    if (checkSensorId() == false)
-    {
-        printf("===========read id fail===========\n");
+    // DeviceInit();
+    // if (checkSensorId() == false)
+    // {
+    //     printf("===========read id fail===========\n");
+    //     return -1;
+    // }
+
+    ret = fb_main();
+    if(ret == -1){
         return -1;
     }
 
+    count = atoi(argv[2]);
     sensor_fops.sensor_init(fd);
-/*
-    switch (argc)
-    {
-    case 1:
-        sensor_fops.sensor_setExpoTime(30);
-        sensor_fops.sensor_setBinning(3);
-        sensor_fops.sensor_setImgGain(1);
-        sensor_fops.sensor_setFrameNum(1);
-        count = 1;
-        break;
-    case 2:
-        sensor_fops.sensor_setExpoTime(atoi(argv[1]));
-        sensor_fops.sensor_setBinning(3);
-        sensor_fops.sensor_setImgGain(1);
-        sensor_fops.sensor_setFrameNum(1);
-        count = 1;
-        break;
-    case 3:
-        sensor_fops.sensor_setExpoTime(atoi(argv[1]));
-        sensor_fops.sensor_setBinning(3);
-        sensor_fops.sensor_setImgGain(1);
-        sensor_fops.sensor_setFrameNum(1);
-        count = atoi(argv[2]);
-        break;
-    case 4:
-        sensor_fops.sensor_setExpoTime(atoi(argv[1]));
-        sensor_fops.sensor_setBinning(3);
-        sensor_fops.sensor_setImgGain(1);
-        sensor_fops.sensor_setFrameNum(atoi(argv[3]));
-        count = atoi(argv[2]);
-        break;
-    case 5:
-        sensor_fops.sensor_setExpoTime(atoi(argv[1]));
-        sensor_fops.sensor_setBinning(3);
-        sensor_fops.sensor_setImgGain(atoi(argv[4]));
-        sensor_fops.sensor_setFrameNum(atoi(argv[3]));
-        count = atoi(argv[2]);
-        break;
-    case 6:
-        sensor_fops.sensor_setExpoTime(atoi(argv[1]));
-        sensor_fops.sensor_setBinning(atoi(argv[5]));
-        sensor_fops.sensor_setImgGain(atoi(argv[4]));
-        sensor_fops.sensor_setFrameNum(atoi(argv[3]));
-        count = atoi(argv[2]);
-        if (atoi(argv[5]) == 2)
-        {
-            SENSOR_WIDTH = 240;
-            SENSOR_HEIGHT = 160;
-        }
-        else if (atoi(argv[5]) == 3)
-        {
-            SENSOR_WIDTH = 160;
-            SENSOR_HEIGHT = 106;
-        }
-        else if (atoi(argv[5]) == 4)
-        {
-            SENSOR_WIDTH = 120;
-            SENSOR_HEIGHT = 80;
-        }
-        break;
-
-    default:
-        printf("the parameter error");
-        return 0;
-    }
-
-    count = atoi(argv[2]);
-    */
-    count = atoi(argv[2]);
     sensor_fops.sensor_setExpoTime(atoi(argv[1]));
     sensor_fops.sensor_setBinning(2);
     sensor_fops.sensor_setImgGain(1);
     sensor_fops.sensor_setFrameNum(1);
-    SENSOR_WIDTH = 176;
-    SENSOR_HEIGHT = 216;
 
-    printf("SENSOR_WIDTH=%d,SENSOR_HEIGHT=%d", SENSOR_WIDTH, SENSOR_HEIGHT);
+    printf("SENSOR_WIDTH=%d,SENSOR_HEIGHT=%d\n", SENSOR_WIDTH, SENSOR_HEIGHT);
     imgbuf1 = (unsigned short *)malloc(SENSOR_WIDTH * SENSOR_HEIGHT * 2 * img_num);
     bmp_buf1 = (unsigned char *)malloc(SENSOR_WIDTH * SENSOR_HEIGHT);
-    bmp_buf2 = (unsigned char *)malloc(SENSOR_WIDTH * SENSOR_HEIGHT);
-
-    // char buf[16];
-    // FILE *fp1 = fopen("/data/temp_rem3.txt", "wb+");
-    // if (fp1 == NULL)
-    // {
-    //     printf("fopen  error");
-    //     return -1;
-    // }
-    // unsigned char x = 0;
-
-    // int g = atoi(argv[4]);
- /*   while(1)
-    {
-       int temp_fd = open("/sys/class/power_supply/battery/temp", O_RDONLY);
-        if (temp_fd < 0)
-        {
-            printf("open /sys/class/power_supply/battery/temp fail");
-            return -1;
-        }
-        read(temp_fd,buf,16);
-        close(temp_fd);
-        printf("temp = %d\n",atoi(buf));
-
-        get_img(imgbuf1, &sensor_fops);
-        uint32_t sum = 0;
-        for (size_t i = 0; i < SENSOR_WIDTH * SENSOR_HEIGHT; i++)
-        {
-            sum += imgbuf1[i];
-        }
-
-        int avg = sum/(SENSOR_WIDTH * SENSOR_HEIGHT);
-        
-        int m = 0;
-        int n = 1;
-        uint32_t temp = 100*16;
-        unsigned char gain = atoi(argv[4]);
-        while ((avg - temp > 0? avg-temp : temp-avg)>5*16)
-        {
-            m++;
-            if(avg<temp){
-                printf("111111111111111111\n");
-                if(m>=64){
-                    m = 0;
-                    n++;
-                    sensor_Gain_1(n);
-                    // printf("0x201 = %d,  n= %d\n",read_register(0x2b1), n);
-                }else{
-                    x = m << 2;
-                    sensor_Gain_2(x);
-                    printf(" x = 0x%02x\n",x);
-                    // printf("0x2012= %d,  n= %d\n",read_register(0x2b1), n);
-                }
-                get_img(imgbuf1, &sensor_fops);
-                sum = 0;
-                for (size_t i = 0; i < SENSOR_WIDTH * SENSOR_HEIGHT; i++)
-                {
-                    sum += imgbuf1[i];
-                }
-                avg = sum/(SENSOR_WIDTH * SENSOR_HEIGHT);
-            }else{
-                printf("222222222222222222\n");
-                sensor_Gain_1(n-1);
-                if(m>=64){
-                    m = 0;
-                    printf("failed xxxxx\n");
-                    exit(1);
-                }else{
-                    x = 0xfc-(unsigned char)(m << 2);
-                    printf(" x = 0x%02x \n",x);
-                    sensor_Gain_2(x);
-                }
-                get_img(imgbuf1, &sensor_fops);
-                sum = 0;
-                for (size_t i = 0; i < SENSOR_WIDTH * SENSOR_HEIGHT; i++)
-                {
-                    sum += imgbuf1[i];
-                }
-                avg = sum/(SENSOR_WIDTH * SENSOR_HEIGHT);
-            }
-            printf("0x2b1 = 0x%02x, 0x2b2 = 0x%02x, avg = %d, sum = %d temp = %d\n",read_register(0x20e), read_register(0x20f)&0xfc,  avg, sum,atoi(buf));
-        }
-
-        uint32_t sum = 0;
-        int avg = 0;
-        for (size_t i = 3; i < 10; i++)
-        {
-            sensor_fops.sensor_setImgGain(i);
-            get_img(imgbuf1, &sensor_fops);
-            sum = 0;
-            for (size_t j = 0; j < SENSOR_WIDTH * SENSOR_HEIGHT; j++)
-            {
-                sum += imgbuf1[j];
-            }
-
-            avg = sum/(SENSOR_WIDTH * SENSOR_HEIGHT);
-
-            char data_buf[128] = {0};
-            sprintf(data_buf,"gain = %d, avg = %d,temp = %d, \n", i, avg, atoi(buf));
-            fwrite(data_buf,128, 1, fp1);
-        }*/
-
-    //     sleep(1);
-    // }
-    // fclose(fp1);
 
     while (count--)
     {
@@ -684,25 +523,8 @@ int main(int argc, char *argv[])
             //    exit(0);
             //}
         }
-        // printf("/n");
-        // int n = 0;
-        // scanf("%d",&n);
-        // sensor_fops.sensor_setFrameNum(n);
-        // sensor_fops.sensor_setBinning(n);
-        // if(n == 2){
-        //     SENSOR_WIDTH = 240;
-        //     SENSOR_HEIGHT = 160;
-        // }else if(n == 3){
-        //     SENSOR_WIDTH = 160;
-        //     SENSOR_HEIGHT = 106;
-        // }else if(n == 4){
-        //     SENSOR_WIDTH = 120;
-        //     SENSOR_HEIGHT = 80;
-        // }
 
-        // need_debug();
-
-        printf("sum ============= %d", sum / (SENSOR_HEIGHT * SENSOR_WIDTH));
+        printf("sum ============= %d\n", sum / (SENSOR_HEIGHT * SENSOR_WIDTH));
 
         char path[64] = {0};
         draw_image(SENSOR_WIDTH, SENSOR_HEIGHT, bmp_buf1, NULL);
@@ -711,7 +533,7 @@ int main(int argc, char *argv[])
         // sprintf(path, "/data/pic/%d.bin", i);
         // fp_SaveBinFile(path, p, SENSOR_HEIGHT * 2, SENSOR_WIDTH);
         i++;
-        //        checksum(bmp_buf);
+        // checksum(bmp_buf);
     }
 
 
