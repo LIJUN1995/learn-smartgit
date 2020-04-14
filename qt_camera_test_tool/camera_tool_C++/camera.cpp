@@ -10,6 +10,7 @@
 #include <semaphore.h>
 #include "fpsxxxx.h"
 #include "fps7011_gcm7s0.h"
+#include "BmpClass.h"
 
 using namespace std;
 
@@ -72,6 +73,7 @@ int fp_SaveGrayBitmap(const char *FilePath, unsigned char *pData, int row, int c
         write(fd, (char *)(pData + (row - i - 1) * colume), (size_t)colume);
         if (colume_t > (uint32_t)colume)
             write(fd, (char *)pad, (size_t)(colume_t - (uint32_t)colume));
+        // write(fd, (char *)(pData + i * colume), (size_t)colume);
     }
     close(fd);
 
@@ -171,16 +173,19 @@ int main(int argc, char *argv[])
     fps->sensor_init();
     fps->sensor_pre_image();
     WaitSemCall();
-    fps->sensor_setImgWH(0,0,360,120);
+    fps->sensor_setImgWH(0,0,240,160);
     fps->sensor_get_img_buffer(vec);
     
     p = (uint16_t *)&vec[0];
     for (size_t i = 0; i < vec.size(); i++)
+    for (size_t i = 0; i < 240*160; i++)
     {
-        vec1.push_back(uint8_t(p[i]>>4));
+        // cout<<hex<<int(p[i])<<endl;
+        // vec1.push_back(uint8_t(p[i]>>4));
     }
 
-    fp_SaveGrayBitmap("0.bmp", &vec1[0], 120, 360);
+    BmpOps bmpOps;
+    bmpOps.saveGrayBitmap("0.bmp",&vec1[0],160,240);
     
 OUT:
     delete fps;

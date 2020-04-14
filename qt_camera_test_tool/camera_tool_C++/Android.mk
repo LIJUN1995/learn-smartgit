@@ -10,6 +10,7 @@ LOCAL_SRC_FILES:= \
         ./fpsxxxx.cpp \
         ./fps7011_gcm7s0.cpp \
         ./fps6038_gc07s0.cpp \
+        ./BmpClass.cpp \
         $(FILE_NAME)
 
 LOCAL_MODULE:= $(DEMO_NAME)

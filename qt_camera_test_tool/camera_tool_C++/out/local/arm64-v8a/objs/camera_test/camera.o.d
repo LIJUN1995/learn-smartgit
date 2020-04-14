@@ -67,7 +67,7 @@
   /usr/local/bin/android-ndk-r21/sources/cxx-stl/llvm-libc++/include/__bit_reference \
   /usr/local/bin/android-ndk-r21/sources/cxx-stl/llvm-libc++/include/vector \
   /usr/local/bin/android-ndk-r21/sources/cxx-stl/llvm-libc++/include/__split_buffer \
-  fpsxxxx.h fps7011_gcm7s0.h
+  fpsxxxx.h fps7011_gcm7s0.h BmpClass.h
 
 /usr/local/bin/android-ndk-r21/sources/cxx-stl/llvm-libc++/include/iostream:
 
@@ -208,3 +208,5 @@
 fpsxxxx.h:
 
 fps7011_gcm7s0.h:
+
+BmpClass.h:
