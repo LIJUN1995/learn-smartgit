@@ -1,7 +1,7 @@
 #ifndef __BMP_CLASS_H__
 #define __BMP_CLASS_H__
 
-#pragma pack(2)
+#pragma pack(push,2)
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
@@ -30,11 +30,12 @@ typedef struct {
     DWORD  biClrImportant; //本位图中重要的色彩数
 }BITMAPINFOHEADER; //位图信息头定义
 
-typedef struct {	
-    BYTE rgbBlue; //该颜色的蓝色分量	
-    BYTE rgbGreen; //该颜色的绿色分量	
-    BYTE rgbRed; //该颜色的红色分量	
-    BYTE rgbReserved; //保留值
+#pragma pack(pop)
+typedef struct {
+    BYTE rgbBlue; //该颜色的蓝色分量
+    BYTE rgbGreen; //该颜色的绿色分量
+    BYTE rgbRed; //该颜色的红色分量		
+    BYTE rgbReserved; //保留值		
 }RGBQUAD;//调色板定义
 
 class BmpOps { 

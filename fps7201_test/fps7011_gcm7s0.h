@@ -1,6 +1,5 @@
 #ifndef __FPS7011_GCM07S0_H__
 #define __FPS7011_GCM07S0_H__
-
 class Fps7011:public Cdfinger_fops{
 private:
     uint8_t fusion_frame_config_value = 0;
@@ -21,6 +20,9 @@ public:
     int sensor_setExpoTime(int time);
     int sensor_setImgGain(uint8_t gain);
     int sensor_setBinning(int binning_mode);
+    int sensor_test_otp(void);
+    void write_otp(uint8_t addr, uint8_t value);
+    uint8_t read_otp(uint8_t addr);
 };
 
 #endif

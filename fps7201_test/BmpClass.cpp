@@ -5,10 +5,6 @@
 #include <fcntl.h>
 
 #include <unistd.h>
-// #include <fcntl.h>
-// #include <signal.h>
-// #include <sys/time.h>
-// #include <semaphore.h>
 
 #include "BmpClass.h"
 
@@ -16,15 +12,17 @@ int BmpOps::saveGrayBitmap(const char *fileName, BYTE *imgData, DWORD row, DWORD
 {
     const DWORD height = row;
     const DWORD width = colume;
-    uint32_t palette[256] = {0};
+    RGBQUAD palette[256] = {0};
     uint8_t *p = NULL;
 
     uint8_t m[1078] = {0};
 
     for (size_t i = 0; i < 256; i++)
     {
-        palette[i] = (i<<16) | (i<<8) | i;
-        // std::cout<<std::hex<<palette[i]<<std::dec<<std::endl;
+        palette[i].rgbReserved = 0;
+        palette[i].rgbRed = i;
+        palette[i].rgbGreen = i;
+        palette[i].rgbBlue = i;
     }
     
 

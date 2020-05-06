@@ -11,6 +11,7 @@
 
 #include "fpsxxxx.h"
 #include "fps7011_gcm7s0.h"
+#include "DevicesOps.h"
 
 using namespace std;
 
@@ -514,6 +515,97 @@ int Fps7011::sensor_setBinning(int binning_mode) {
 
     // if (sensor_sleep() < 0) {
     //     return -1;
+    // }
+
+    return 0;
+}
+
+void Fps7011::write_otp(uint8_t addr, uint8_t value)
+{   
+    uint8_t ret = 0;
+    ret = read_register(0x325);
+    if(ret != 0){
+        cerr<<"write OTP busy!!!!!!!!!"<<endl;
+        return;
+    }
+
+    write_register(0x320,0x07);
+    write_register(0x321,0x80);
+
+    write_register(0x322,addr);
+    write_register(0x323,value);
+
+    // write_register(0x321,0xc0); //byte操作
+    write_register(0x321,0xc8); //bit操作
+}
+
+uint8_t Fps7011::read_otp(uint8_t addr)
+{   
+    uint8_t ret = 0;
+    ret = read_register(0x325);
+    if(ret != 0){
+        cerr<<"read OTP busy!!!!!!!!!"<<endl;
+        // return 0;
+    }
+
+    write_register(0x320,0x07);
+    write_register(0x321,0x80);
+
+    write_register(0x322,addr);
+
+    // write_register(0x321,0xa0); //byte操作
+    write_register(0x321,0xa4); //bit操作
+
+    return read_register(0x324);
+} 
+
+int Fps7011::sensor_test_otp(void)
+{
+    uint8_t ret = 0;
+
+    for (size_t i = 0; i < 0xff; i++)
+    {
+        ret = read_otp(uint8_t(i));
+        if(ret != 0){
+            cerr<<"otp error! addr:"<<hex<<int(i)<<"   value:"<<int(ret)<<dec<<endl;
+        }
+    } 
+    
+    for (size_t i = 0; i < 0xff; i++)
+    {
+        if(i%2){
+            write_otp(uint8_t(i),1);
+            ret = read_otp(uint8_t(i));
+            if(ret != 1){
+                cerr<<"write otp error! addr:"<<hex<<int(i)<<"   value:"<<int(ret)<<dec<<endl;
+            }
+        }else{
+            write_otp(uint8_t(i),0);
+            ret = read_otp(uint8_t(i));
+            if(ret != 0){
+                cerr<<"write otp error! addr:"<<hex<<int(i)<<"   value:"<<int(ret)<<dec<<endl;
+            }
+        }
+    }
+
+    // for (size_t i = 0; i < 0xff; i+=8)
+    // {
+    //     ret = read_otp(uint8_t(i));
+    //     if(ret != 0){
+    //         cerr<<"otp error! addr:"<<hex<<int(i)<<"   value:"<<int(ret)<<dec<<endl;
+    //     }
+    // } 
+
+    // int n = 0;
+    // for (size_t i = 0; i < 0xff; i+=8)
+    // {
+    //     n++;
+       
+    //     write_otp(uint8_t(i),uint8_t(n));
+    //     ret = read_otp(uint8_t(i));
+    //     if(ret != uint8_t(n)){
+    //         cerr<<"write otp error! addr:"<<hex<<int(i)<<"   value:"<<int(ret)<<dec<<endl;
+    //     }
     // }
 
     return 0;

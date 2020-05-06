@@ -2,6 +2,8 @@
 
 #include <sys/ioctl.h>
 
+#include "DevicesOps.h"
+
 // #ifdef __cplusplus
 // extern "C"{
 // #endif

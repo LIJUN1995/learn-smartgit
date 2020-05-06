@@ -3,7 +3,6 @@ include $(CLEAR_VARS)
 
 LOCAL_C_INCLUDES += \
     . \
-    ./camera_ctl_file \
 
 push:$(BIN)
 LOCAL_SRC_FILES:= \
@@ -11,6 +10,7 @@ LOCAL_SRC_FILES:= \
         ./fps7011_gcm7s0.cpp \
         ./fps6038_gc07s0.cpp \
         ./BmpClass.cpp \
+        ./DevicesOps.cpp \
         $(FILE_NAME)
 
 LOCAL_MODULE:= $(DEMO_NAME)

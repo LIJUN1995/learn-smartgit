@@ -11,6 +11,7 @@
 
 #include "fpsxxxx.h"
 #include "fps6038_gc07s0.h"
+#include "DevicesOps.h"
 
 using namespace std;
 
